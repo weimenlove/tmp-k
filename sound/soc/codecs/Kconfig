@@ -117,12 +117,9 @@ config SND_SOC_AD1980
 config SND_SOC_AD73311
 	tristate
 	
-config SND_SOC_ADAU1373
-	tristate
-
 config SND_SOC_ADAU1701
 	tristate
-	select SIGMA
+	select SND_SOC_SIGMA
 
 config SND_SOC_ADS117X
 	tristate
@@ -148,6 +145,10 @@ config SND_SOC_CS42L51
 # Cirrus Logic CS4270 Codec
 config SND_SOC_CS4270
 	tristate
+
+config SND_SOC_SIGMA
+	tristate
+	select CRC32
 
 # Cirrus Logic CS4270 Codec VD = 3.3V Errata
 # Select if you are affected by the errata where the part will not function
