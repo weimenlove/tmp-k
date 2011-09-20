@@ -25,7 +25,7 @@ struct sigma_firmware_header {
 	unsigned char magic[7];
 	u8 version;
 	__le32 crc;
-};
+} __packed;
 
 enum {
 	SIGMA_ACTION_WRITEXBYTES = 0,
@@ -43,7 +43,7 @@ struct sigma_action {
 	__le16 len;
 	__be16 addr;
 	unsigned char payload[];
-};
+} __packed;
 
 static inline u32 sigma_action_len(struct sigma_action *sa)
 {
