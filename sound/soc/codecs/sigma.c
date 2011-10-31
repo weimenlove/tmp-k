@@ -15,13 +15,30 @@
 
 #include "sigma.h"
 
-/* Return: 0==OK, <0==error, =1 ==no more actions */
-static int
-process_sigma_action(struct i2c_client *client, struct sigma_firmware *ssfw)
+static size_t sigma_action_size(struct sigma_action *sa)
 {
-	struct sigma_action *sa = (void *)(ssfw->fw->data + ssfw->pos);
+	size_t payload = 0;
+
+	switch (sa->instr) {
+	case SIGMA_ACTION_WRITEXBYTES:
+	case SIGMA_ACTION_WRITESINGLE:
+	case SIGMA_ACTION_WRITESAFELOAD:
+		payload = sigma_action_len(sa);
+		break;
+	default:
+		break;
+	}
+
+	payload = ALIGN(payload, 2);
+
+	return payload + sizeof(struct sigma_action);
+}
+
+static int
+process_sigma_action(struct i2c_client *client, struct sigma_action *sa)
+{
 	size_t len = sigma_action_len(sa);
-	int ret = 0;
+	int ret;
 
 	pr_debug("%s: instr:%i addr:%#x len:%zu\n", __func__,
 		sa->instr, sa->addr, len);
@@ -30,44 +47,53 @@ process_sigma_action(struct i2c_client *client, struct sigma_firmware *ssfw)
 	case SIGMA_ACTION_WRITEXBYTES:
 	case SIGMA_ACTION_WRITESINGLE:
 	case SIGMA_ACTION_WRITESAFELOAD:
-		if (ssfw->fw->size < ssfw->pos + len)
-			return -EINVAL;
 		ret = i2c_master_send(client, (void *)&sa->addr, len);
 		if (ret < 0)
 			return -EINVAL;
 		break;
-
 	case SIGMA_ACTION_DELAY:
-		ret = 0;
 		udelay(len);
 		len = 0;
 		break;
-
 	case SIGMA_ACTION_END:
-		return 1;
-
+		return 0;
 	default:
 		return -EINVAL;
 	}
 
-	/* when arrive here ret=0 or sent data */
-	ssfw->pos += sigma_action_size(sa, len);
-	return ssfw->pos == ssfw->fw->size;
+	return 1;
 }
 
 static int
 process_sigma_actions(struct i2c_client *client, struct sigma_firmware *ssfw)
 {
-	pr_debug("%s: processing %p\n", __func__, ssfw);
+	struct sigma_action *sa;
+	size_t size;
+	int ret;
 
-	while (1) {
-		int ret = process_sigma_action(client, ssfw);
+	while (ssfw->pos + sizeof(*sa) <= ssfw->fw->size) {
+		sa = (struct sigma_action *)(ssfw->fw->data + ssfw->pos);
+
+		size = sigma_action_size(sa);
+		if (size > UINT_MAX - ssfw->pos)
+			break;
+
+		ssfw->pos += size;
+		if (ssfw->pos > ssfw->fw->size || size == 0)
+			break;
+
+		ret = process_sigma_action(client, sa);
+
 		pr_debug("%s: action returned %i\n", __func__, ret);
-		if (ret == 1)
-			return 0;
-		else if (ret)
+
+		if (ret <= 0)
 			return ret;
 	}
+
+	if (ssfw->pos != ssfw->fw->size)
+		return -EINVAL;
+
+	return 0;
 }
 
 int process_sigma_firmware(struct i2c_client *client, const char *name)
@@ -90,7 +116,9 @@ int process_sigma_firmware(struct i2c_client *client, const char *name)
 
 	/* then verify the header */
 	ret = -EINVAL;
-	if (fw->size < sizeof(*ssfw_head))
+
+	/* Reject too small or unreasonable large files */
+	if (fw->size < sizeof(*ssfw_head) || fw->size > 0x100000)
 		goto done;
 
 	ssfw_head = (void *)fw->data;
