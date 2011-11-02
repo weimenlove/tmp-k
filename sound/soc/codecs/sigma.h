@@ -44,6 +44,12 @@ static inline u32 sigma_action_len(struct sigma_action *sa)
 	return (sa->len_hi << 16) | le16_to_cpu(sa->len);
 }
 
+
+#include <linux/device.h>
+#include <linux/regmap.h>
+
 extern int process_sigma_firmware(struct i2c_client *client, const char *name);
+extern int process_sigma_firmware_regmap(struct device *dev,
+		struct regmap *regmap, const char *name);
 
 #endif
