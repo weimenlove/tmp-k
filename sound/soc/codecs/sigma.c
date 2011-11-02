@@ -15,6 +15,11 @@
 
 #include "sigma.h"
 
+struct sigma_firmware {
+	const struct firmware *fw;
+	size_t pos;
+};
+
 static size_t sigma_action_size(struct sigma_action *sa)
 {
 	size_t payload = 0;

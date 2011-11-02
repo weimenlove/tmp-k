@@ -9,17 +9,11 @@
 #ifndef __SIGMA_FIRMWARE_H__
 #define __SIGMA_FIRMWARE_H__
 
-#include <linux/firmware.h>
 #include <linux/types.h>
 
 struct i2c_client;
 
 #define SIGMA_MAGIC "ADISIGM"
-
-struct sigma_firmware {
-	const struct firmware *fw;
-	size_t pos;
-};
 
 struct sigma_firmware_header {
 	unsigned char magic[7];
