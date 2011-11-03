@@ -251,6 +251,7 @@ enum snd_soc_control_type {
 	SND_SOC_CUSTOM,
 	SND_SOC_I2C,
 	SND_SOC_SPI,
+	SND_SOC_REGMAP,
 };
 
 int snd_soc_register_platform(struct device *dev,

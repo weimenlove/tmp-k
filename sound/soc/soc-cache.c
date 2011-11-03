@@ -17,6 +17,7 @@
 #include <linux/lzo.h>
 #include <linux/bitmap.h>
 #include <linux/rbtree.h>
+#include <linux/regmap.h>
 
 #include <trace/events/asoc.h>
 
@@ -389,6 +390,80 @@ static struct {
 	},
 };
 
+#ifdef CONFIG_REGMAP
+
+static int snd_soc_regmap_hw_write(struct snd_soc_codec *codec, unsigned int reg,
+		    unsigned int value)
+{
+	int ret;
+
+	if (!snd_soc_codec_volatile_register(codec, reg) &&
+	    reg < codec->driver->reg_cache_size &&
+	    !codec->cache_bypass) {
+		ret = snd_soc_cache_write(codec, reg, value);
+		if (ret < 0)
+			return -1;
+	}
+
+	if (codec->cache_only) {
+		codec->cache_sync = 1;
+		return 0;
+	}
+
+	return regmap_write(codec->control_data, reg, value);
+}
+
+static unsigned int snd_soc_regmap_hw_read(struct snd_soc_codec *codec, unsigned int reg)
+{
+	int ret;
+	unsigned int val;
+
+	if (reg >= codec->driver->reg_cache_size ||
+	    snd_soc_codec_volatile_register(codec, reg) ||
+	    codec->cache_bypass) {
+		if (codec->cache_only)
+			return -1;
+
+		ret = regmap_read(codec->control_data, reg, &val);
+		if (ret == 0)
+			return val;
+		else
+			return -1;
+	}
+
+	ret = snd_soc_cache_read(codec, reg, &val);
+	if (ret < 0)
+		return -1;
+	return val;
+}
+
+/* Primitive bulk write support for soc-cache.  The data pointed to by
+ * `data' needs to already be in the form the hardware expects.  Any
+ * data written through this function will not go through the cache as
+ * it only handles writing to volatile or out of bounds registers.
+ *
+ * This is currently only supported for devices using the regmap API
+ * wrappers.
+ */
+static int snd_soc_regmap_hw_bulk_write_raw(struct snd_soc_codec *codec,
+				     unsigned int reg,
+				     const void *data, size_t len)
+{
+	/* To ensure that we don't get out of sync with the cache, check
+	 * whether the base register is volatile or if we've directly asked
+	 * to bypass the cache.  Out of bounds registers are considered
+	 * volatile.
+	 */
+	if (!codec->cache_bypass
+	    && !snd_soc_codec_volatile_register(codec, reg)
+	    && reg < codec->driver->reg_cache_size)
+		return -EINVAL;
+
+	return regmap_raw_write(codec->control_data, reg, data, len);
+}
+
+#endif
+
 /**
  * snd_soc_codec_set_cache_io: Set up standard I/O functions.
  *
@@ -413,6 +488,16 @@ int snd_soc_codec_set_cache_io(struct snd_soc_codec *codec,
 			       enum snd_soc_control_type control)
 {
 	int i;
+
+#ifdef CONFIG_REGMAP
+	if (control == SND_SOC_REGMAP) {
+		codec->write = snd_soc_regmap_hw_write;
+		codec->read = snd_soc_regmap_hw_read;
+		codec->bulk_write_raw = snd_soc_regmap_hw_bulk_write_raw;
+
+		return 0;
+	}
+#endif
 
 	for (i = 0; i < ARRAY_SIZE(io_types); i++)
 		if (io_types[i].addr_bits == addr_bits &&
@@ -453,6 +538,9 @@ int snd_soc_codec_set_cache_io(struct snd_soc_codec *codec,
 						   struct spi_device,
 						   dev);
 		break;
+	default:
+		BUG();
+		return -EINVAL;
 	}
 
 	return 0;
