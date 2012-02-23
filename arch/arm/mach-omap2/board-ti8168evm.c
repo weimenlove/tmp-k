@@ -25,6 +25,7 @@
 #include <linux/spi/flash.h>
 #include <linux/mtd/physmap.h>
 #include <linux/phy.h>
+#include <linux/phy_fixed.h>
 #include <linux/gpio.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/gpio-regulator.h>
@@ -798,6 +799,11 @@ static struct platform_device *ti8168_devices[] __initdata = {
 };
 #endif
 
+static struct fixed_phy_status fixed_phy_status __initdata = {
+	.link		= 1,
+	.speed		= 100,
+	.duplex		= 1,
+};
 
 static void __init ti8168_evm_init(void)
 {
@@ -835,6 +841,9 @@ static void __init ti8168_evm_init(void)
 #endif
 	regulator_has_full_constraints();
 	regulator_use_dummy_regulator();
+
+	/* Add a fixed phy @ address 0:00 for the FPGA interface */
+	fixed_phy_add(PHY_POLL, 0, &fixed_phy_status);
 }
 
 static int __init ti8168_evm_gpio_setup(void)

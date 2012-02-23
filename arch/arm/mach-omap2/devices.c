@@ -1218,7 +1218,7 @@ static struct resource ti816x_mdio_resources[] = {
 
 static struct platform_device ti816x_mdio_device = {
 	.name           = "davinci_mdio",
-	.id             = 0,
+	.id             = 1,
 	.num_resources  = ARRAY_SIZE(ti816x_mdio_resources),
 	.resource	= ti816x_mdio_resources,
 	.dev.platform_data = &ti816x_mdio_pdata,
@@ -1226,13 +1226,14 @@ static struct platform_device ti816x_mdio_device = {
 
 static struct emac_platform_data ti816x_emac1_pdata = {
 	.rmii_en	=	0,
-	.phy_id		=	"0:01",
+	.phy_id		=	"1:03",
 	.gigabit_en	=	1,
 };
 
 static struct emac_platform_data ti816x_emac2_pdata = {
 	.rmii_en	=	0,
-	.phy_id		=	"0:02",
+	/* Used the fixed phy address for talking to FPGA */
+	.phy_id		=	"0:00",
 	.gigabit_en	=	1,
 };
 
