@@ -810,14 +810,14 @@ static inline void adau17x1_spi_mode(struct device *dev) {}
 
 int adau17x1_remove(struct snd_soc_codec *codec)
 {
-	snd_soc_codec_set_bias_level(codec, SND_SOC_BIAS_OFF);
+	codec->driver>set_bias_level(codec, SND_SOC_BIAS_OFF);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(adau17x1_remove);
 
 int adau17x1_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
-	snd_soc_codec_set_bias_level(codec, SND_SOC_BIAS_OFF);
+	codec->driver>set_bias_level(codec, SND_SOC_BIAS_OFF);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(adau17x1_suspend);
@@ -829,7 +829,7 @@ int adau17x1_resume(struct snd_soc_codec *codec)
 	if (adau->control_type == SND_SOC_SPI)
 		adau17x1_spi_mode(codec->dev);
 
-	snd_soc_codec_set_bias_level(codec, SND_SOC_BIAS_STANDBY);
+	codec->driver>set_bias_level(codec, SND_SOC_BIAS_STANDBY);
 	regcache_sync(adau->regmap);
 
 	return 0;
