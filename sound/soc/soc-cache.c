@@ -19,8 +19,6 @@
 #include <linux/rbtree.h>
 #include <linux/regmap.h>
 
-#include <trace/events/asoc.h>
-
 #ifdef CONFIG_SPI_MASTER
 static int do_spi_write(void *control, const char *data, int len)
 {
@@ -1384,7 +1382,6 @@ EXPORT_SYMBOL_GPL(snd_soc_cache_write);
 int snd_soc_cache_sync(struct snd_soc_codec *codec)
 {
 	int ret;
-	const char *name;
 
 	if (!codec->cache_sync) {
 		return 0;
@@ -1394,18 +1391,11 @@ int snd_soc_cache_sync(struct snd_soc_codec *codec)
 		return -ENOSYS;
 
 	if (codec->cache_ops->name)
-		name = codec->cache_ops->name;
-	else
-		name = "unknown";
-
-	if (codec->cache_ops->name)
 		dev_dbg(codec->dev, "Syncing %s cache for %s codec\n",
 			codec->cache_ops->name, codec->name);
-	trace_snd_soc_cache_sync(codec, name, "start");
 	ret = codec->cache_ops->sync(codec);
 	if (!ret)
 		codec->cache_sync = 0;
-	trace_snd_soc_cache_sync(codec, name, "end");
 	return ret;
 }
 EXPORT_SYMBOL_GPL(snd_soc_cache_sync);
