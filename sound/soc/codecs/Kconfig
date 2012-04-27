@@ -123,8 +123,8 @@ config SND_SOC_ADAU17X1
 	select REGMAP_I2C
 	tristate
 config SND_SOC_ADAU1761
+	tristate "Enable the ADAU1761 codec"
 	select SND_SOC_ADAU17X1
-	tristate
 
 config SND_SOC_ADAU1701
 	tristate
