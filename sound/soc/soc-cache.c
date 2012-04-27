@@ -17,6 +17,7 @@
 #include <linux/lzo.h>
 #include <linux/bitmap.h>
 #include <linux/rbtree.h>
+#include <linux/regmap.h>
 
 #ifdef CONFIG_SPI_MASTER
 static int do_spi_write(void *control, const char *data, int len)
@@ -231,6 +232,25 @@ static unsigned int snd_soc_16_8_read_i2c(struct snd_soc_codec *codec,
 #define snd_soc_16_8_read_i2c NULL
 #endif
 
+#if defined(CONFIG_SPI_MASTER)
+static unsigned int snd_soc_16_8_read_spi(struct snd_soc_codec *codec,
+					  unsigned int r)
+{
+	struct spi_device *spi = codec->control_data;
+
+	const u16 reg = cpu_to_be16(r | 0x100);
+	u8 data;
+	int ret;
+
+	ret = spi_write_then_read(spi, &reg, 2, &data, 1);
+	if (ret < 0)
+		return 0;
+	return data;
+}
+#else
+#define snd_soc_16_8_read_spi NULL
+#endif
+
 static unsigned int snd_soc_16_8_read(struct snd_soc_codec *codec,
 				      unsigned int reg)
 {
@@ -335,6 +355,7 @@ static struct {
 	int (*write)(struct snd_soc_codec *codec, unsigned int, unsigned int);
 	unsigned int (*read)(struct snd_soc_codec *, unsigned int);
 	unsigned int (*i2c_read)(struct snd_soc_codec *, unsigned int);
+	unsigned int (*spi_read)(struct snd_soc_codec *, unsigned int);
 } io_types[] = {
 	{
 		.addr_bits = 4, .data_bits = 12,
@@ -358,6 +379,7 @@ static struct {
 		.addr_bits = 16, .data_bits = 8,
 		.write = snd_soc_16_8_write, .read = snd_soc_16_8_read,
 		.i2c_read = snd_soc_16_8_read_i2c,
+		.spi_read = snd_soc_16_8_read_spi,
 	},
 	{
 		.addr_bits = 16, .data_bits = 16,
@@ -365,6 +387,80 @@ static struct {
 		.i2c_read = snd_soc_16_16_read_i2c,
 	},
 };
+
+#ifdef CONFIG_REGMAP
+
+static int snd_soc_regmap_hw_write(struct snd_soc_codec *codec, unsigned int reg,
+		    unsigned int value)
+{
+	int ret;
+
+	if (!snd_soc_codec_volatile_register(codec, reg) &&
+	    reg < codec->driver->reg_cache_size &&
+	    !codec->cache_bypass) {
+		ret = snd_soc_cache_write(codec, reg, value);
+		if (ret < 0)
+			return -1;
+	}
+
+	if (codec->cache_only) {
+		codec->cache_sync = 1;
+		return 0;
+	}
+
+	return regmap_write(codec->control_data, reg, value);
+}
+
+static unsigned int snd_soc_regmap_hw_read(struct snd_soc_codec *codec, unsigned int reg)
+{
+	int ret;
+	unsigned int val;
+
+	if (reg >= codec->driver->reg_cache_size ||
+	    snd_soc_codec_volatile_register(codec, reg) ||
+	    codec->cache_bypass) {
+		if (codec->cache_only)
+			return -1;
+
+		ret = regmap_read(codec->control_data, reg, &val);
+		if (ret == 0)
+			return val;
+		else
+			return -1;
+	}
+
+	ret = snd_soc_cache_read(codec, reg, &val);
+	if (ret < 0)
+		return -1;
+	return val;
+}
+
+/* Primitive bulk write support for soc-cache.  The data pointed to by
+ * `data' needs to already be in the form the hardware expects.  Any
+ * data written through this function will not go through the cache as
+ * it only handles writing to volatile or out of bounds registers.
+ *
+ * This is currently only supported for devices using the regmap API
+ * wrappers.
+ */
+static int snd_soc_regmap_hw_bulk_write_raw(struct snd_soc_codec *codec,
+				     unsigned int reg,
+				     const void *data, size_t len)
+{
+	/* To ensure that we don't get out of sync with the cache, check
+	 * whether the base register is volatile or if we've directly asked
+	 * to bypass the cache.  Out of bounds registers are considered
+	 * volatile.
+	 */
+	if (!codec->cache_bypass
+	    && !snd_soc_codec_volatile_register(codec, reg)
+	    && reg < codec->driver->reg_cache_size)
+		return -EINVAL;
+
+	return regmap_raw_write(codec->control_data, reg, data, len);
+}
+
+#endif
 
 /**
  * snd_soc_codec_set_cache_io: Set up standard I/O functions.
@@ -390,6 +486,16 @@ int snd_soc_codec_set_cache_io(struct snd_soc_codec *codec,
 			       enum snd_soc_control_type control)
 {
 	int i;
+
+#ifdef CONFIG_REGMAP
+	if (control == SND_SOC_REGMAP) {
+		codec->write = snd_soc_regmap_hw_write;
+		codec->read = snd_soc_regmap_hw_read;
+		codec->bulk_write_raw = snd_soc_regmap_hw_bulk_write_raw;
+
+		return 0;
+	}
+#endif
 
 	for (i = 0; i < ARRAY_SIZE(io_types); i++)
 		if (io_types[i].addr_bits == addr_bits &&
@@ -423,11 +529,16 @@ int snd_soc_codec_set_cache_io(struct snd_soc_codec *codec,
 #ifdef CONFIG_SPI_MASTER
 		codec->hw_write = do_spi_write;
 #endif
+		if (io_types[i].spi_read)
+			codec->hw_read = io_types[i].spi_read;
 
 		codec->control_data = container_of(codec->dev,
 						   struct spi_device,
 						   dev);
 		break;
+	default:
+		BUG();
+		return -EINVAL;
 	}
 
 	return 0;
