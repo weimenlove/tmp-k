@@ -43,8 +43,8 @@
 #include <plat/usb.h>
 #include <plat/mmc.h>
 #include <plat/gpmc.h>
-#include <plat/nand.h>
-#include <plat/hdmi_lib.h>
+//#include <plat/nand.h>
+//#include <plat/hdmi_lib.h>
 
 #include "control.h"
 
@@ -65,14 +65,6 @@ static struct omap2_hsmmc_info mmc[] = {
 	},
 	{}	/* Terminator */
 };
-
-#define VPS_VC_IO_EXP_RESET_DEV_MASK        (0x0Fu)
-#define VPS_VC_IO_EXP_SEL_VIN0_S1_MASK      (0x04u)
-#define VPS_VC_IO_EXP_THS7368_DISABLE_MASK  (0x10u)
-#define VPS_VC_IO_EXP_THS7368_BYPASS_MASK   (0x20u)
-#define VPS_VC_IO_EXP_THS7368_FILTER1_MASK  (0x40u)
-#define VPS_VC_IO_EXP_THS7368_FILTER2_MASK  (0x80u)
-#define VPS_VC_IO_EXP_THS7368_FILTER_SHIFT  (0x06u)
 
 static struct mtd_partition ti816x_evm_norflash_partitions[] = {
 	/* bootloader (U-Boot, etc) in first 5 sectors */
@@ -147,12 +139,6 @@ static struct mtd_partition ti816x_nand_partitions[] = {
 	},
 };
 
-static struct at24_platform_data eeprom_info = {
-	.byte_len       = (256*1024) / 8,
-	.page_size      = 64,
-	.flags          = AT24_FLAG_ADDR16,
-};
-
 #ifdef CONFIG_REGULATOR_GPIO
 static struct regulator_consumer_supply ti816x_gpio_dcdc_supply[] = {
 	{
@@ -220,88 +206,40 @@ static inline void ti816x_gpio_vr_init(void) {}
 #endif
 
 static struct i2c_board_info __initdata ti816x_i2c_boardinfo0[] = {
-//    ADAU1761   0x70
-//    R5H30211   0xA2
-//    M24C64     0xA0
-//    BQ32000    0xD0
-//    CY8C3446AX ??
-//    CY8C3446AX ??
 	{
-		I2C_BOARD_INFO("eeprom", 0x50),
-		.platform_data	= &eeprom_info,
+	  I2C_BOARD_INFO("adau1761", 0x70), // codec
 	},
 	{
-		I2C_BOARD_INFO("cpld", 0x23),
+	  I2C_BOARD_INFO("R5H30211", 0x22), // MCU
 	},
 	{
-		I2C_BOARD_INFO("IO Expander", 0x20),
+	  I2C_BOARD_INFO("M24C64", 0x20), //eeprom
 	},
-
+	/* Not present yet
+	{
+		I2C_BOARD_INFO("CY8C3446AX1", 0x04),
+	},
+	{
+		I2C_BOARD_INFO("CY8C3446AX2", 0x08),
+	},
+	*/
 };
 
+/* For future device expansion
 static struct i2c_board_info __initdata ti816x_i2c_boardinfo1[] = {
 // PCA9517 hub   N/A
 	{
-		I2C_BOARD_INFO("sii9022a", 0x39),
+		I2C_BOARD_INFO("xyzzy", 0x39),
 	},
 };
-
-static struct i2c_client *ths7353_client;
-
-#define I2C_RETRY_COUNT 10u
-
-/* FIX ME: Check on the Bit Value */
-
-#define TI816X_EVM_CIR_UART BIT(5)
-
-static struct i2c_client *cpld_reg0_client;
-
-/* CPLD Register 0 Client: used for I/O Control */
-static int cpld_reg0_probe(struct i2c_client *client,
-			const struct i2c_device_id *id)
-{
-	u8 data;
-	struct i2c_msg msg[2] = {
-		{
-			.addr = client->addr,
-			.flags = I2C_M_RD,
-			.len = 1,
-			.buf = &data,
-		},
-		{
-			.addr = client->addr,
-			.flags = 0,
-			.len = 1,
-			.buf = &data,
-		},
-	};
-
-	cpld_reg0_client = client;
-
-	/* Clear UART CIR to enable cir operation. */
-		i2c_transfer(client->adapter, msg, 1);
-		data &= ~(TI816X_EVM_CIR_UART);
-		i2c_transfer(client->adapter, msg + 1, 1);
-	return 0;
-}
-
-static const struct i2c_device_id cpld_reg_ids[] = {
-		{ "cpld_reg0", 0, },
-		{ },
-};
-
-static struct i2c_driver ti816xevm_cpld_driver = {
-	.driver.name    = "cpld_reg0",
-	.id_table       = cpld_reg_ids,
-	.probe          = cpld_reg0_probe,
-};
+*/
 
 static int __init ti816x_evm_i2c_init(void)
 {
 	omap_register_i2c_bus(1, 100, ti816x_i2c_boardinfo0,
 		ARRAY_SIZE(ti816x_i2c_boardinfo0));
-	omap_register_i2c_bus(2, 100, ti816x_i2c_boardinfo1,
-		ARRAY_SIZE(ti816x_i2c_boardinfo1));
+	//omap_register_i2c_bus(2, 100, ti816x_i2c_boardinfo1,
+	//	ARRAY_SIZE(ti816x_i2c_boardinfo1));
 	return 0;
 }
 
@@ -426,34 +364,6 @@ static struct omap_board_mux board_mux[] __initdata = {
 
 int __init ti_ahci_register(u8 num_inst);
 
-#ifdef CONFIG_SND_SOC_TI81XX_HDMI
-static struct snd_hdmi_platform_data ti8168_snd_hdmi_pdata = {
-	.dma_addr = TI81xx_HDMI_WP + HDMI_WP_AUDIO_DATA,
-	.channel = 53,
-	.data_type = 4,
-	.acnt = 4,
-	.fifo_level = 0x20,
-};
-
-static struct platform_device ti8168_hdmi_audio_device = {
-	.name	= "hdmi-dai",
-	.id	= -1,
-        .dev = {
-		.platform_data = &ti8168_snd_hdmi_pdata,
-        }
-};
-
-static struct platform_device ti8168_hdmi_codec_device = {
-	.name	= "hdmi-dummy-codec",
-	.id	= -1,
-};
-
-static struct platform_device *ti8168_devices[] __initdata = {
-	&ti8168_hdmi_audio_device,
-	&ti8168_hdmi_codec_device,
-};
-#endif
-
 static struct fixed_phy_status fixed_phy_status __initdata = {
 	.link		= 1,
 	.speed		= 100,
@@ -467,7 +377,6 @@ static void __init ti8168_evm_init(void)
 	ti81xx_mux_init(board_mux);
 	omap_serial_init();
 	ti816x_evm_i2c_init();
-	i2c_add_driver(&ti816xevm_cpld_driver);
 	ti81xx_register_mcasp(0, &ti8168_evm_snd_data);
 	ti816x_spi_init();
 	/* initialize usb */
@@ -491,9 +400,7 @@ static void __init ti8168_evm_init(void)
 	board_nor_init(ti816x_evm_norflash_partitions,
 		ARRAY_SIZE(ti816x_evm_norflash_partitions), 0);
 	ti816x_gpio_vr_init();
-#ifdef CONFIG_SND_SOC_TI81XX_HDMI
-	platform_add_devices(ti8168_devices, ARRAY_SIZE(ti8168_devices));
-#endif
+
 	regulator_has_full_constraints();
 	regulator_use_dummy_regulator();
 
