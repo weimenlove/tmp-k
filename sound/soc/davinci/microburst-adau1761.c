@@ -1,9 +1,11 @@
 /*
- * Machine driver for EVAL-adau1x61MINIZ on Analog Devices bfin
+ * Machine driver for microburst board, adapted from
+ * driver for EVAL-adau1x61MINIZ on Analog Devices bfin
  * evaluation boards.
  *
  * Copyright 2011 Analog Devices Inc.
  * Author: Lars-Peter Clausen <lars@metafoo.de>
+ * Modified for microburst: Steve Conklin <steve@conklinhouse.com>
  *
  * Licensed under the GPL-2 or later.
  */
@@ -109,8 +111,8 @@ static struct snd_soc_dai_link bfin_eval_adau1x61_dai = {
 	.stream_name = "adau1x61",
 	.cpu_dai_name = "bfin-i2s.0",
 	.codec_dai_name = "adau-hifi",
-	.platform_name = "bfin-i2s-pcm-audio",
-	.codec_name = "adau1761.0-0038",
+	.platform_name = "snd-soc-dummy",
+	.codec_name = "adau1761.1-0070",
 	.ops = &bfin_eval_adau1x61_ops,
 };
 
