@@ -33,6 +33,14 @@ config SND_DAVINCI_SOC_EVM
 	  Say Y if you want to add support for SoC audio on TI
 	  DaVinci DM6446, DM355 or DM365 EVM platforms.
 
+config SND_MICROBURST
+	tristate "Audio support for microburst board"
+	depends on ARCH_TI81XX
+	select SND_SOC_ADAU1761
+	help
+	  Say Y if you want to add support for SoC audio on the
+	  Microburst platform
+
 choice
 	prompt "DM365 codec select"
 	depends on SND_DAVINCI_SOC_EVM
