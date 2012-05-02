@@ -107,11 +107,11 @@ static struct snd_soc_ops bfin_eval_adau1x61_ops = {
 };
 
 static struct snd_soc_dai_link bfin_eval_adau1x61_dai = {
-	.name = "adau1x61",
-	.stream_name = "adau1x61",
-	.cpu_dai_name = "bfin-i2s.0",
+	.name = "adau1761",
+	.stream_name = "adau1761",
+	.cpu_dai_name = "omap_i2c.1",
 	.codec_dai_name = "adau-hifi",
-	.platform_name = "snd-soc-dummy",
+	.platform_name = "davinci_pcm_audio",
 	.codec_name = "adau1761.1-0070",
 	.ops = &bfin_eval_adau1x61_ops,
 };
