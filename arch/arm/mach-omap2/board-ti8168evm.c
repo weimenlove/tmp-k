@@ -292,6 +292,13 @@ static void __init ti816x_spi_init(void)
 				ARRAY_SIZE(ti816x_spi_slave_info));
 }
 
+static struct platform_device flex_adau1x61_device = {
+	.name = "bfin-eval-adau1x61",
+};
+
+static struct platform_device *flex_devices[] __initdata = {
+	&flex_adau1x61_device,
+};
 
 static void __init ti8168_evm_init_irq(void)
 {
@@ -381,7 +388,8 @@ static void __init ti8168_evm_init(void)
 	ti816x_spi_init();
 	/* initialize usb */
 	usb_musb_init(&musb_board_data);
-
+	/* register devices (sound card) */
+	platform_add_devices(flex_devices, ARRAY_SIZE(flex_devices));
 	/* nand initialisation */
 	if (cpu_is_ti81xx()) {
 		u32 *control_status = TI81XX_CTRL_REGADDR(0x40);
