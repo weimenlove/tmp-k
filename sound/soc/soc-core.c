@@ -1292,25 +1292,31 @@ static int soc_bind_dai_link(struct snd_soc_card *card, int num)
 	struct snd_soc_dai *codec_dai, *cpu_dai;
 	const char *platform_name;
 
+	printk("*** soc_bind_dai_link:  enter ***\n");
 	if (rtd->complete)
 		return 1;
 	dev_dbg(card->dev, "binding %s at idx %d\n", dai_link->name, num);
 
 	/* do we already have the CPU DAI for this link ? */
+	printk("*** soc_bind_dai_link:  (1) ***\n");
 	if (rtd->cpu_dai) {
 		goto find_codec;
 	}
 	/* no, then find CPU DAI from registered DAIs*/
+	printk("*** soc_bind_dai_link:  (2) ***\n");
 	list_for_each_entry(cpu_dai, &dai_list, list) {
+	        printk("*** soc_bind_dai_link: compare cpu_dai %s with %s ***\n", cpu_dai->name, dai_link->cpu_dai_name);
 		if (!strcmp(cpu_dai->name, dai_link->cpu_dai_name)) {
 			rtd->cpu_dai = cpu_dai;
 			goto find_codec;
 		}
 	}
+	printk("*** soc_bind_dai_link:  (3) ***\n");
 	dev_dbg(card->dev, "CPU DAI %s not registered\n",
 			dai_link->cpu_dai_name);
 
 find_codec:
+	printk("*** soc_bind_dai_link:  find_codec ***\n");
 	/* do we already have the CODEC for this link ? */
 	if (rtd->codec) {
 		goto find_platform;
@@ -1335,14 +1341,17 @@ find_codec:
 			goto find_platform;
 		}
 	}
+	printk("*** soc_bind_dai_link: codec not registered ***\n");
 	dev_dbg(card->dev, "CODEC %s not registered\n",
 			dai_link->codec_name);
 
 find_platform:
+	printk("*** soc_bind_dai_link: find_platform ***\n");
 	/* do we need a platform? */
 	if (rtd->platform)
 		goto out;
 
+	printk("*** soc_bind_dai_link: find_platform (2) ***\n");
 	/* if there's no platform we match on the empty platform */
 	platform_name = dai_link->platform_name;
 	if (!platform_name)
@@ -1350,17 +1359,20 @@ find_platform:
 
 	/* no, then find one from the set of registered platforms */
 	list_for_each_entry(platform, &platform_list, list) {
+	        printk("*** soc_bind_dai_link: find_platform compare %s with %s ***\n", platform->name, platform_name);
 		if (!strcmp(platform->name, platform_name)) {
 			rtd->platform = platform;
 			goto out;
 		}
 	}
 
+	printk("*** soc_bind_dai_link: find_platform not registered ***\n");
 	dev_dbg(card->dev, "platform %s not registered\n",
 			dai_link->platform_name);
 	return 0;
 
 out:
+	printk("*** soc_bind_dai_link: find_platform out ***\n");
 	/* mark rtd as complete if we found all 4 of our client devices */
 	if (rtd->codec && rtd->codec_dai && rtd->platform && rtd->cpu_dai) {
 		rtd->complete = 1;
@@ -1816,6 +1828,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 	enum snd_soc_compress_type compress_type;
 	int ret, i;
 
+	printk("^^^^^^ snd_soc_instantiate_card ^^^^^^\n");
 	mutex_lock(&card->mutex);
 
 	if (card->instantiated) {
@@ -1984,6 +1997,7 @@ card_probe_error:
  */
 static void snd_soc_instantiate_cards(void)
 {
+        printk("^^^^^^ snd_soc_instantiate_cards ^^^^^^\n");
 	struct snd_soc_card *card;
 	list_for_each_entry(card, &card_list, list)
 		snd_soc_instantiate_card(card);
@@ -3352,6 +3366,7 @@ int snd_soc_register_card(struct snd_soc_card *card)
 {
 	int i;
 
+	printk("^^^^^^ snd_soc_register_card ^^^^^^\n");
 	if (!card->name || !card->dev)
 		return -EINVAL;
 
@@ -3474,6 +3489,7 @@ int snd_soc_register_dai(struct device *dev,
 {
 	struct snd_soc_dai *dai;
 
+	printk("^^^^^^ snd_soc_register_dai ^^^^^^\n");
 	dev_dbg(dev, "dai register %s\n", dev_name(dev));
 
 	dai = kzalloc(sizeof(struct snd_soc_dai), GFP_KERNEL);
@@ -3541,6 +3557,7 @@ int snd_soc_register_dais(struct device *dev,
 	struct snd_soc_dai *dai;
 	int i, ret = 0;
 
+	printk("^^^^^^ snd_soc_register_dais ^^^^^^\n");
 	dev_dbg(dev, "dai register %s #%Zu\n", dev_name(dev), count);
 
 	for (i = 0; i < count; i++) {
@@ -3613,6 +3630,7 @@ int snd_soc_register_platform(struct device *dev,
 {
 	struct snd_soc_platform *platform;
 
+	printk("^^^^^^ snd_soc_register_platform ^^^^^^\n");
 	dev_dbg(dev, "platform register %s\n", dev_name(dev));
 
 	platform = kzalloc(sizeof(struct snd_soc_platform), GFP_KERNEL);
@@ -3713,6 +3731,7 @@ int snd_soc_register_codec(struct device *dev,
 	struct snd_soc_codec *codec;
 	int ret, i;
 
+	printk("^^^^^^ snd_soc_register_codec ^^^^^^\n");
 	dev_dbg(dev, "codec register %s\n", dev_name(dev));
 
 	codec = kzalloc(sizeof(struct snd_soc_codec), GFP_KERNEL);

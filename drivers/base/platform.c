@@ -244,27 +244,36 @@ int platform_device_add(struct platform_device *pdev)
 {
 	int i, ret = 0;
 
+	printk("*** platform_device_add: enter ***\n");
 	if (!pdev)
 		return -EINVAL;
 
-	if (!pdev->dev.parent)
+	printk("*** platform_device_add: (1) ***\n");
+	if (!pdev->dev.parent) {
+	        printk("*** platform_device_add No parent! ***\n");
 		pdev->dev.parent = &platform_bus;
+	}
 
 	pdev->dev.bus = &platform_bus_type;
 
+	printk("*** platform_device_add: name = %s, id = %d ***\n", pdev->name, pdev->id);
 	if (pdev->id != -1)
 		dev_set_name(&pdev->dev, "%s.%d", pdev->name,  pdev->id);
 	else
 		dev_set_name(&pdev->dev, "%s", pdev->name);
 
+	printk("*** platform_device_add: (2) ***\n");
 	for (i = 0; i < pdev->num_resources; i++) {
+	  printk("*** platform_device_add: resource loop %d ***\n", i);
 		struct resource *p, *r = &pdev->resource[i];
 
 		if (r->name == NULL)
 			r->name = dev_name(&pdev->dev);
 
+		printk("*** platform_device_add: resource name = %s ***\n", r->name);
 		p = r->parent;
 		if (!p) {
+		        printk("*** platform_device_add: no resource parent ***\n");
 			if (resource_type(r) == IORESOURCE_MEM)
 				p = &iomem_resource;
 			else if (resource_type(r) == IORESOURCE_IO)
@@ -280,6 +289,7 @@ int platform_device_add(struct platform_device *pdev)
 		}
 	}
 
+	printk("*** platform_device_add: (3) ***\n");
 	pr_debug("Registering platform device '%s'. Parent at %s\n",
 			dev_name(&pdev->dev), dev_name(pdev->dev.parent));
 
@@ -288,6 +298,7 @@ int platform_device_add(struct platform_device *pdev)
 		return ret;
 
  failed:
+	printk("*** platform_device_add: failed ***\n");
 	while (--i >= 0) {
 		struct resource *r = &pdev->resource[i];
 		unsigned long type = resource_type(r);
