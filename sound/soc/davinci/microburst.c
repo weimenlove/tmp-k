@@ -138,22 +138,10 @@ static struct snd_soc_dai_link microburst_dai = {
   .ops = &bfin_eval_adau1x61_ops,
 };
 
-/* From bfin
-static struct snd_soc_card bfin_eval_adau1x61 = {
-	.name = "bfin-eval-adau1x61",
-	.driver_name = "eval-adau1x61",
-	.dai_link = &bfin_eval_adau1x61_dai,
-	.num_links = 1,
-
-	.dapm_widgets		= bfin_eval_adau1x61_dapm_widgets,
-	.num_dapm_widgets	= ARRAY_SIZE(bfin_eval_adau1x61_dapm_widgets),
-	.dapm_routes		= bfin_eval_adau1x61_dapm_routes,
-	.num_dapm_routes	= ARRAY_SIZE(bfin_eval_adau1x61_dapm_routes),
-	}; */
-
 static struct snd_soc_card microburst_snd_soc_card = {
-	.name = "Microburst",
+	.name = "eval-microburst-adau1761",
 	.dai_link = &microburst_dai,
+	.driver_name = "microburst-adau1761",
 	.num_links = 1,
 	.dapm_widgets		= bfin_eval_adau1x61_dapm_widgets,
 	.num_dapm_widgets	= ARRAY_SIZE(bfin_eval_adau1x61_dapm_widgets),
@@ -173,12 +161,13 @@ static int __init evm_init(void)
 	index = 0;
 
 
-	evm_snd_device = platform_device_alloc("Microburst", index);
+	evm_snd_device = platform_device_alloc("eval-microburst-adau1761", index);
 	if (!evm_snd_device)
 		return -ENOMEM;
 
 	platform_set_drvdata(evm_snd_device, evm_snd_dev_data);
 	ret = platform_device_add(evm_snd_device);
+	printk("*** microburst: platform_device_add returned %d ***\n", ret);
 	if (ret) {
 	        printk("*** microburst: about to put ***\n");
 		platform_device_put(evm_snd_device);
@@ -195,6 +184,6 @@ static void __exit evm_exit(void)
 module_init(evm_init);
 module_exit(evm_exit);
 
-MODULE_AUTHOR("Vladimir Barinov");
-MODULE_DESCRIPTION("TI DAVINCI EVM ASoC driver");
+MODULE_AUTHOR("Steve Conklin");
+MODULE_DESCRIPTION("Microburst ASoC driver");
 MODULE_LICENSE("GPL");
