@@ -884,13 +884,16 @@ static int __init adau1761_init(void)
 {
 	int ret = 0;
 
+	printk("^^^^^^ adau1761_init enter ^^^^^^\n");
 #if defined(CONFIG_SPI_MASTER)
+	printk("^^^^^^ adau1761_init SPI ^^^^^^\n");
 	ret = spi_register_driver(&adau1761_spi_driver);
 	if (ret)
 		return ret;
 #endif
 
 #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)
+	printk("^^^^^^ adau1761_init I2C ^^^^^^\n");
 	ret = i2c_add_driver(&adau1761_i2c_driver);
 #endif
 

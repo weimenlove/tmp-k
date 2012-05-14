@@ -412,10 +412,15 @@ void dev_set_drvdata(struct device *dev, void *data)
 {
 	int error;
 
-	if (!dev)
+	printk("***** dev_set_drvdata enter *****\n");
+	if (!dev) {
+		printk("***** dev_set_drvdata NO DEVICE *****\n");
 		return;
+	}
 	if (!dev->p) {
+		printk("***** dev_set_drvdata NO dev->p *****\n");
 		error = device_private_init(dev);
+		printk("***** dev_set_drvdata device_private_init() returned %d *****\n", error);
 		if (error)
 			return;
 	}

@@ -1832,20 +1832,25 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 	mutex_lock(&card->mutex);
 
 	if (card->instantiated) {
+		printk("***** snd_soc_instantiate_card already instantiated *****\n");
 		mutex_unlock(&card->mutex);
 		return;
 	}
 
 	/* bind DAIs */
-	for (i = 0; i < card->num_links; i++)
+	for (i = 0; i < card->num_links; i++) {
+		printk("***** snd_soc_instantiate_card binding dai %d *****\n", i);
 		soc_bind_dai_link(card, i);
+	}
 
 	/* bind completed ? */
 	if (card->num_rtd != card->num_links) {
+		printk("***** snd_soc_instantiate_card already bind completed *****\n");
 		mutex_unlock(&card->mutex);
 		return;
 	}
 
+	printk("***** snd_soc_instantiate_card register cache *****\n");
 	/* initialize the register cache for each available codec */
 	list_for_each_entry(codec, &codec_list, list) {
 		if (codec->cache_init)
@@ -1869,6 +1874,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 		}
 	}
 
+	printk("***** snd_soc_instantiate_card bind complete, register a sound card *****\n");
 	/* card bind complete so register a sound card */
 	ret = snd_card_create(SNDRV_DEFAULT_IDX1, SNDRV_DEFAULT_STR1,
 			card->owner, 0, &card->snd_card);
@@ -1898,6 +1904,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 		snd_soc_dapm_new_controls(&card->dapm, card->dapm_widgets,
 					  card->num_dapm_widgets);
 
+	printk("***** snd_soc_instantiate_card about to init *****\n");
 	/* initialise the sound card only once */
 	if (card->probe) {
 		ret = card->probe(card);
@@ -1923,6 +1930,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 		}
 	}
 
+	printk("***** snd_soc_instantiate_card (A) *****\n");
 	/* We should have a non-codec control add function but we don't */
 	if (card->controls)
 		snd_soc_add_controls(list_first_entry(&card->codec_dev_list,
@@ -1999,8 +2007,10 @@ static void snd_soc_instantiate_cards(void)
 {
         printk("^^^^^^ snd_soc_instantiate_cards ^^^^^^\n");
 	struct snd_soc_card *card;
-	list_for_each_entry(card, &card_list, list)
+	list_for_each_entry(card, &card_list, list) {
+		printk("^^^^^^ snd_soc_instantiate_cards iterating over ^^^^^^\n");
 		snd_soc_instantiate_card(card);
+	}
 }
 
 /* probes a new socdev */
@@ -3367,13 +3377,18 @@ int snd_soc_register_card(struct snd_soc_card *card)
 	int i;
 
 	printk("^^^^^^ snd_soc_register_card ^^^^^^\n");
-	if (!card->name || !card->dev)
+	if (!card->name || !card->dev) {
+	        printk("snd_soc_register_card NO NAME OR DEV \n");
 		return -EINVAL;
+	}
 
+	printk("^^^^^^ snd_soc_register_card 2 ^^^^^^\n");
 	dev_set_drvdata(card->dev, card);
 
+	printk("^^^^^^ snd_soc_register_card 3 ^^^^^^\n");
 	snd_soc_initialize_card_lists(card);
 
+	printk("^^^^^^ snd_soc_register_card 4 ^^^^^^\n");
 	soc_init_card_debugfs(card);
 
 	card->rtd = kzalloc(sizeof(struct snd_soc_pcm_runtime) *
@@ -3383,9 +3398,12 @@ int snd_soc_register_card(struct snd_soc_card *card)
 		return -ENOMEM;
 	card->rtd_aux = &card->rtd[card->num_links];
 
-	for (i = 0; i < card->num_links; i++)
+	for (i = 0; i < card->num_links; i++) {
+		printk("^^^^^^ snd_soc_register_card link %d ^^^^^^\n", i);
 		card->rtd[i].dai_link = &card->dai_link[i];
+	}
 
+	printk("^^^^^^ snd_soc_register_card 5 ^^^^^^\n");
 	INIT_LIST_HEAD(&card->list);
 	card->instantiated = 0;
 	mutex_init(&card->mutex);
@@ -3644,11 +3662,13 @@ int snd_soc_register_platform(struct device *dev,
 		return -ENOMEM;
 	}
 
+	printk("^^^^^^ snd_soc_register_platform name = %s ^^^^^^\n", platform->name);
 	platform->dev = dev;
 	platform->driver = platform_drv;
 
 	mutex_lock(&client_mutex);
 	list_add(&platform->list, &platform_list);
+	printk("^^^^^^ snd_soc_register_platform calling snd_soc_instantiate_cards() ^^^^^^\n");
 	snd_soc_instantiate_cards();
 	mutex_unlock(&client_mutex);
 

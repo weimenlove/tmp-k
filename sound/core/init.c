@@ -151,6 +151,7 @@ int snd_card_create(int idx, const char *xid,
 	struct snd_card *card;
 	int err, idx2;
 
+	printk("***** snd_card_create enter *****\n");
 	if (snd_BUG_ON(!card_ret))
 		return -EINVAL;
 	*card_ret = NULL;
@@ -160,10 +161,12 @@ int snd_card_create(int idx, const char *xid,
 	card = kzalloc(sizeof(*card) + extra_size, GFP_KERNEL);
 	if (!card)
 		return -ENOMEM;
+	printk("***** snd_card_create (1) *****\n");
 	if (xid)
 		strlcpy(card->id, xid, sizeof(card->id));
 	err = 0;
 	mutex_lock(&snd_card_mutex);
+	printk("***** snd_card_create (2) *****\n");
 	if (idx < 0) {
 		for (idx2 = 0; idx2 < SNDRV_CARDS; idx2++)
 			/* idx == -1 == 0xffff means: take any free slot */
@@ -184,8 +187,10 @@ int snd_card_create(int idx, const char *xid,
 				}
 			}
 	}
-	if (idx < 0)
+	if (idx < 0) {
+		printk("***** snd_card_create ENODEV *****\n");
 		err = -ENODEV;
+	}
 	else if (idx < snd_ecards_limit) {
 		if (snd_cards_lock & (1 << idx))
 			err = -EBUSY;	/* invalid */
@@ -230,6 +235,7 @@ int snd_card_create(int idx, const char *xid,
 	if (extra_size > 0)
 		card->private_data = (char *)card + sizeof(struct snd_card);
 	*card_ret = card;
+	printk("***** snd_card_create return SUCCESS *****\n");
 	return 0;
 
       __error_ctl:
