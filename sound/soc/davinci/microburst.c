@@ -132,9 +132,9 @@ static struct snd_soc_dai_link microburst_dai = {
   .stream_name = "adau1x61",
   .cpu_dai_name = "davinci-mcasp.2",
   .codec_dai_name = "adau-hifi",
-  .codec_name = "adau1761",
+  .codec_name = "adau1761.1-0070",
   .platform_name = "davinci-pcm-audio",
-  //.init = evm_aic3x_init,
+  .init = adau1761_init,
   .ops = &bfin_eval_adau1x61_ops,
 };
 
