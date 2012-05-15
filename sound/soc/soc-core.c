@@ -1828,7 +1828,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 	enum snd_soc_compress_type compress_type;
 	int ret, i;
 
-	printk("^^^^^^ snd_soc_instantiate_card ^^^^^^\n");
+	printk("<=====> snd_soc_instantiate_card <=====>\n");
 	mutex_lock(&card->mutex);
 
 	if (card->instantiated) {
@@ -2005,8 +2005,8 @@ card_probe_error:
  */
 static void snd_soc_instantiate_cards(void)
 {
-        printk("^^^^^^ snd_soc_instantiate_cards ^^^^^^\n");
 	struct snd_soc_card *card;
+        printk("@@@@@@ snd_soc_instantiate_cards @@@@@@\n");
 	list_for_each_entry(card, &card_list, list) {
 		printk("^^^^^^ snd_soc_instantiate_cards iterating over ^^^^^^\n");
 		snd_soc_instantiate_card(card);
