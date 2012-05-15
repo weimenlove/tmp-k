@@ -447,13 +447,20 @@ static void platform_drv_shutdown(struct device *_dev)
 int platform_driver_register(struct platform_driver *drv)
 {
 	drv->driver.bus = &platform_bus_type;
-	if (drv->probe)
+	if (drv->probe) {
+		printk("-- platform_driver_register: set probe\n");
 		drv->driver.probe = platform_drv_probe;
-	if (drv->remove)
+	}
+	if (drv->remove) {
+		printk("-- platform_driver_register: set remove\n");
 		drv->driver.remove = platform_drv_remove;
-	if (drv->shutdown)
+	}
+	if (drv->shutdown) {
+		printk("-- platform_driver_register: set shutdown\n");
 		drv->driver.shutdown = platform_drv_shutdown;
+	}
 
+	printk("-- platform_driver_register: calling driver_register\n");
 	return driver_register(&drv->driver);
 }
 EXPORT_SYMBOL_GPL(platform_driver_register);

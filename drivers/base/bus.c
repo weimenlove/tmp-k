@@ -629,6 +629,7 @@ int bus_add_driver(struct device_driver *drv)
 	struct driver_private *priv;
 	int error = 0;
 
+	printk("\/\/\/ bus_add_driver: enter \/\/\/\n");
 	bus = bus_get(drv->bus);
 	if (!bus)
 		return -EINVAL;
@@ -649,6 +650,7 @@ int bus_add_driver(struct device_driver *drv)
 	if (error)
 		goto out_unregister;
 
+	printk("\/\/\/ driver_register: 1 before autoprobe \/\/\/\n");
 	if (drv->bus->p->drivers_autoprobe) {
 		error = driver_attach(drv);
 		if (error)
@@ -657,6 +659,7 @@ int bus_add_driver(struct device_driver *drv)
 	klist_add_tail(&priv->knode_bus, &bus->p->klist_drivers);
 	module_add_driver(drv->owner, drv);
 
+	printk("\/\/\/ driver_register: 1 before create_file \/\/\/\n");
 	error = driver_create_file(drv, &driver_attr_uevent);
 	if (error) {
 		printk(KERN_ERR "%s: uevent attr (%s) failed\n",

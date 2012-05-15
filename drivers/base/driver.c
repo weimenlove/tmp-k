@@ -187,7 +187,9 @@ static int driver_add_groups(struct device_driver *drv,
 	int error = 0;
 	int i;
 
+	printk("\/\/\/ driver_add_groups: enter \/\/\/\n");
 	if (groups) {
+		printk("\/\/\/ driver_add_groups: have groups \/\/\/\n");
 		for (i = 0; groups[i]; i++) {
 			error = sysfs_create_group(&drv->p->kobj, groups[i]);
 			if (error) {
@@ -226,6 +228,7 @@ int driver_register(struct device_driver *drv)
 
 	BUG_ON(!drv->bus->p);
 
+	printk("\/\/\/ driver_register: enter \/\/\/\n");
 	if ((drv->bus->probe && drv->probe) ||
 	    (drv->bus->remove && drv->remove) ||
 	    (drv->bus->shutdown && drv->shutdown))
@@ -234,15 +237,18 @@ int driver_register(struct device_driver *drv)
 
 	other = driver_find(drv->name, drv->bus);
 	if (other) {
+		printk("\/\/\/ driver_register: other \/\/\/\n");
 		put_driver(other);
 		printk(KERN_ERR "Error: Driver '%s' is already registered, "
 			"aborting...\n", drv->name);
 		return -EBUSY;
 	}
 
+	printk("\/\/\/ driver_register: 1 \/\/\/\n");
 	ret = bus_add_driver(drv);
 	if (ret)
 		return ret;
+	printk("\/\/\/ driver_register: 2 \/\/\/\n");
 	ret = driver_add_groups(drv, drv->groups);
 	if (ret)
 		bus_remove_driver(drv);
