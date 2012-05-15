@@ -131,6 +131,7 @@ static int bfin_eval_adau1x61_probe(struct platform_device *pdev)
 {
 	struct snd_soc_card *card = &bfin_eval_adau1x61;
 
+	printk("!!!!! bfin_eval_adau1x61_probe:  enter !!!!!\n");
 	card->dev = &pdev->dev;
 
 	return snd_soc_register_card(card);
@@ -140,6 +141,7 @@ static int __devexit bfin_eval_adau1x61_remove(struct platform_device *pdev)
 {
 	struct snd_soc_card *card = platform_get_drvdata(pdev);
 
+	printk("!!!!! bfin_eval_adau1x61_remove:  enter !!!!!\n");
 	snd_soc_unregister_card(card);
 
 	return 0;
@@ -157,12 +159,14 @@ static struct platform_driver bfin_eval_adau1x61_driver = {
 
 static int __init bfin_eval_adau1x61_init(void)
 {
+	printk("!!!!! bfin_eval_adau1x61_init:  enter !!!!!\n");
 	return platform_driver_register(&bfin_eval_adau1x61_driver);
 }
 module_init(bfin_eval_adau1x61_init);
 
 static void __exit bfin_eval_adau1x61_exit(void)
 {
+	printk("!!!!! bfin_eval_adau1x61_exit:  enter !!!!!\n");
 	platform_driver_unregister(&bfin_eval_adau1x61_driver);
 }
 module_exit(bfin_eval_adau1x61_exit);
