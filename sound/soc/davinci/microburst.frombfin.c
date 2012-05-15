@@ -111,7 +111,6 @@ static struct snd_soc_dai_link bfin_eval_adau1x61_dai = {
 	.codec_dai_name = "adau-hifi", // the codec dai name
 	.platform_name = "davinci-pcm-audio", // The platform name that appears to the system
 	.codec_name = "adau1761.1-0070", // The codec name to associate with
-	.init = adau1761_init, // Added this
 	.ops = &bfin_eval_adau1x61_ops,
 };
 
