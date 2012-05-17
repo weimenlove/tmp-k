@@ -1907,12 +1907,14 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 	printk("***** snd_soc_instantiate_card about to init *****\n");
 	/* initialise the sound card only once */
 	if (card->probe) {
+		printk("***** snd_soc_instantiate_card probing *****\n");
 		ret = card->probe(card);
 		if (ret < 0)
 			goto card_probe_error;
 	}
 
 	for (i = 0; i < card->num_links; i++) {
+		printk("***** snd_soc_instantiate_card dai linking *****\n");
 		ret = soc_probe_dai_link(card, i);
 		if (ret < 0) {
 			pr_err("asoc: failed to instantiate card %s: %d\n",
@@ -1922,6 +1924,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 	}
 
 	for (i = 0; i < card->num_aux_devs; i++) {
+		printk("***** snd_soc_instantiate_card probe aux device %d *****\n", i);
 		ret = soc_probe_aux_dev(card, i);
 		if (ret < 0) {
 			pr_err("asoc: failed to add auxiliary devices %s: %d\n",
@@ -1932,26 +1935,33 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 
 	printk("***** snd_soc_instantiate_card (A) *****\n");
 	/* We should have a non-codec control add function but we don't */
-	if (card->controls)
+	if (card->controls) {
+		printk("***** snd_soc_instantiate_card adding controls *****\n");
 		snd_soc_add_controls(list_first_entry(&card->codec_dev_list,
 						      struct snd_soc_codec,
 						      card_list),
 				     card->controls,
 				     card->num_controls);
+	}
 
-	if (card->dapm_routes)
+	if (card->dapm_routes) {
+		printk("***** snd_soc_instantiate_card adding routes *****\n");
 		snd_soc_dapm_add_routes(&card->dapm, card->dapm_routes,
 					card->num_dapm_routes);
+	}
 
 	snprintf(card->snd_card->shortname, sizeof(card->snd_card->shortname),
 		 "%s", card->name);
 	snprintf(card->snd_card->longname, sizeof(card->snd_card->longname),
 		 "%s", card->long_name ? card->long_name : card->name);
-	if (card->driver_name)
+	if (card->driver_name) {
+		printk("***** snd_soc_instantiate_card NAME IS %s *****\n", card->driver_name);
 		strlcpy(card->snd_card->driver, card->driver_name,
 			sizeof(card->snd_card->driver));
+	}
 
 	if (card->late_probe) {
+		printk("***** snd_soc_instantiate_card late probe *****\n");
 		ret = card->late_probe(card);
 		if (ret < 0) {
 			dev_err(card->dev, "%s late_probe() failed: %d\n",
@@ -1960,6 +1970,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 		}
 	}
 
+	printk("***** snd_soc_instantiate_card about to register *****\n");
 	ret = snd_card_register(card->snd_card);
 	if (ret < 0) {
 		printk(KERN_ERR "asoc: failed to register soundcard for %s\n", card->name);
@@ -1984,13 +1995,16 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 	return;
 
 probe_aux_dev_err:
+	printk("***** snd_soc_instantiate_card probe_aux_dev_error *****\n");
 	for (i = 0; i < card->num_aux_devs; i++)
 		soc_remove_aux_dev(card, i);
 
 probe_dai_err:
+	printk("***** snd_soc_instantiate_card probe_dai_error *****\n");
 	soc_remove_dai_links(card);
 
 card_probe_error:
+	printk("***** snd_soc_instantiate_card card_probe_error *****\n");
 	if (card->remove)
 		card->remove(card);
 
@@ -3576,6 +3590,7 @@ int snd_soc_register_dais(struct device *dev,
 	int i, ret = 0;
 
 	printk("^^^^^^ snd_soc_register_dais ^^^^^^\n");
+	printk("dai register %s #%Zu\n", dev_name(dev), count);
 	dev_dbg(dev, "dai register %s #%Zu\n", dev_name(dev), count);
 
 	for (i = 0; i < count; i++) {
@@ -3594,6 +3609,7 @@ int snd_soc_register_dais(struct device *dev,
 			goto err;
 		}
 
+		printk("^^^^^^ snd_soc_register_dais dai_name = %s ^^^^^^\n", dai->name);
 		dai->dev = dev;
 		dai->driver = &dai_drv[i];
 		if (dai->driver->id)
@@ -3764,6 +3780,7 @@ int snd_soc_register_codec(struct device *dev,
 		kfree(codec);
 		return -ENOMEM;
 	}
+	printk("^^^^^^ snd_soc_register_codec codec_name = %s^^^^^^\n", codec->name);
 
 	if (codec_drv->compress_type)
 		codec->compress_type = codec_drv->compress_type;
@@ -3785,6 +3802,7 @@ int snd_soc_register_codec(struct device *dev,
 	mutex_init(&codec->mutex);
 
 	/* allocate CODEC register cache */
+	printk("^^^^^^ snd_soc_register_codec allocate cache ^^^^^^\n");
 	if (codec_drv->reg_cache_size && codec_drv->reg_word_size) {
 		reg_size = codec_drv->reg_cache_size * codec_drv->reg_word_size;
 		codec->reg_size = reg_size;
@@ -3804,6 +3822,7 @@ int snd_soc_register_codec(struct device *dev,
 		}
 	}
 
+	printk("^^^^^^ snd_soc_register_codec 1 ^^^^^^\n");
 	if (codec_drv->reg_access_size && codec_drv->reg_access_default) {
 		if (!codec->volatile_register)
 			codec->volatile_register = snd_soc_default_volatile_register;
@@ -3813,6 +3832,7 @@ int snd_soc_register_codec(struct device *dev,
 			codec->writable_register = snd_soc_default_writable_register;
 	}
 
+	printk("^^^^^^ snd_soc_register_codec num_dai = %d ^^^^^^\n", num_dai);
 	for (i = 0; i < num_dai; i++) {
 		fixup_codec_formats(&dai_drv[i].playback);
 		fixup_codec_formats(&dai_drv[i].capture);

@@ -654,10 +654,12 @@ int snd_card_register(struct snd_card *card)
 {
 	int err;
 
+	printk("~~~~~ snd_card_register():  enter ~~~~~\n");
 	if (snd_BUG_ON(!card))
 		return -EINVAL;
 
 	if (!card->card_dev) {
+		printk("~~~~~ snd_card_register(): creating device ~~~~~\n");
 		card->card_dev = device_create(sound_class, card->dev,
 					       MKDEV(0, 0), card,
 					       "card%i", card->number);
@@ -668,7 +670,9 @@ int snd_card_register(struct snd_card *card)
 	if ((err = snd_device_register_all(card)) < 0)
 		return err;
 	mutex_lock(&snd_card_mutex);
+	printk("~~~~~ snd_card_register(): 1 ~~~~~\n");
 	if (snd_cards[card->number]) {
+		printk("~~~~~ snd_card_register(): already registered ~~~~~\n");
 		/* already registered */
 		mutex_unlock(&snd_card_mutex);
 		return 0;
@@ -677,14 +681,17 @@ int snd_card_register(struct snd_card *card)
 	snd_cards[card->number] = card;
 	mutex_unlock(&snd_card_mutex);
 	init_info_for_card(card);
+	printk("~~~~~ snd_card_register(): 2 ~~~~~\n");
 #if defined(CONFIG_SND_MIXER_OSS) || defined(CONFIG_SND_MIXER_OSS_MODULE)
 	if (snd_mixer_oss_notify_callback)
 		snd_mixer_oss_notify_callback(card, SND_MIXER_OSS_NOTIFY_REGISTER);
 #endif
 	if (card->card_dev) {
+		printk("~~~~~ snd_card_register(): creating file 1 ~~~~~\n");
 		err = device_create_file(card->card_dev, &card_id_attrs);
 		if (err < 0)
 			return err;
+		printk("~~~~~ snd_card_register(): creating file 2 ~~~~~\n");
 		err = device_create_file(card->card_dev, &card_number_attrs);
 		if (err < 0)
 			return err;
