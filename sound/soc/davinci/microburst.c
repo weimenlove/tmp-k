@@ -1,43 +1,21 @@
 /*
- * ASoC driver for Microburst
- * adapted from ASoC driver for TI DAVINCI EVM platform
- * by Steve Conklin <steve@conklinhouse.com>
+ * Machine driver for EVAL-adau1x61MINIZ on Analog Devices bfin
+ * evaluation boards.
  *
- * Author:      Vladimir Barinov, <vbarinov@embeddedalley.com>
- * Copyright:   (C) 2007 MontaVista Software, Inc., <source@mvista.com>
+ * Copyright 2011 Analog Devices Inc.
+ * Author: Lars-Peter Clausen <lars@metafoo.de>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
+ * Licensed under the GPL-2 or later.
  */
 
 #include <linux/module.h>
-#include <linux/moduleparam.h>
-#include <linux/timer.h>
-#include <linux/interrupt.h>
-#include <linux/platform_device.h>
-#include <linux/i2c.h>
+#include <linux/device.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/soc.h>
-#include <sound/soc-dapm.h>
-
-#include <asm/dma.h>
-#include <asm/mach-types.h>
-
-#ifndef CONFIG_ARCH_TI81XX
-#include <mach/asp.h>
-#include <mach/edma.h>
-#include <mach/mux.h>
-#else
-#include <plat/asp.h>
-#include <asm/hardware/edma.h>
-#endif
+#include <sound/pcm_params.h>
 
 #include "../codecs/adau17x1.h"
-#include "davinci-pcm.h"
-#include "davinci-i2s.h"
-#include "davinci-mcasp.h"
 
 static const struct snd_soc_dapm_widget bfin_eval_adau1x61_dapm_widgets[] = {
 	SND_SOC_DAPM_LINE("In 1", NULL),
@@ -126,64 +104,73 @@ static struct snd_soc_ops bfin_eval_adau1x61_ops = {
 	.hw_params = bfin_eval_adau1x61_hw_params,
 };
 
-/* davinci-evm digital audio interface glue - connects codec <--> CPU */
-static struct snd_soc_dai_link microburst_dai = {
-  .name = "adau1x61",
-  .stream_name = "adau1x61",
-  .cpu_dai_name = "davinci-mcasp.2",
-  .codec_dai_name = "adau-hifi",
-  .codec_name = "adau1761.1-0070",
-  .platform_name = "davinci-pcm-audio",
-  .init = adau1761_init,
-  .ops = &bfin_eval_adau1x61_ops,
+static struct snd_soc_dai_link bfin_eval_adau1x61_dai = {
+	.name = "adau1x61",
+	.stream_name = "adau1x61",
+	.cpu_dai_name = "davinci-mcasp.2", // Is this wrong? bfin used "bfin-i2s.0"
+	.codec_dai_name = "adau-hifi", // the codec dai name
+	.platform_name = "davinci-pcm-audio", // The platform name that appears to the system
+	.codec_name = "adau1761.1-0070", // The codec name to associate with
+	.ops = &bfin_eval_adau1x61_ops,
 };
 
-static struct snd_soc_card microburst_snd_soc_card = {
-	.name = "eval-microburst-adau1761",
-	.dai_link = &microburst_dai,
-	.driver_name = "microburst-adau1761",
+static struct snd_soc_card bfin_eval_adau1x61 = {
+	.name = "bfin-eval-adau1x61",
+	.driver_name = "eval-adau1x61",
+	.dai_link = &bfin_eval_adau1x61_dai,
 	.num_links = 1,
+
 	.dapm_widgets		= bfin_eval_adau1x61_dapm_widgets,
 	.num_dapm_widgets	= ARRAY_SIZE(bfin_eval_adau1x61_dapm_widgets),
 	.dapm_routes		= bfin_eval_adau1x61_dapm_routes,
 	.num_dapm_routes	= ARRAY_SIZE(bfin_eval_adau1x61_dapm_routes),
 };
 
-static struct platform_device *evm_snd_device;
-static int __init evm_init(void)
+static int bfin_eval_adau1x61_probe(struct platform_device *pdev)
 {
-	struct snd_soc_card *evm_snd_dev_data;
-	int index;
-	int ret;
+	struct snd_soc_card *card = &bfin_eval_adau1x61;
 
-	printk("*** microburst: Enter evm_init ***\n");
-	evm_snd_dev_data = &microburst_snd_soc_card;
-	index = 0;
+	printk("!!!!! bfin_eval_adau1x61_probe:  enter !!!!!\n");
+	card->dev = &pdev->dev;
 
-
-	evm_snd_device = platform_device_alloc("eval-microburst-adau1761", index);
-	if (!evm_snd_device)
-		return -ENOMEM;
-
-	platform_set_drvdata(evm_snd_device, evm_snd_dev_data);
-	ret = platform_device_add(evm_snd_device);
-	printk("*** microburst: platform_device_add returned %d ***\n", ret);
-	if (ret) {
-	        printk("*** microburst: about to put ***\n");
-		platform_device_put(evm_snd_device);
-	}
-
-	return ret;
+	return snd_soc_register_card(card);
 }
 
-static void __exit evm_exit(void)
+static int __devexit bfin_eval_adau1x61_remove(struct platform_device *pdev)
 {
-	platform_device_unregister(evm_snd_device);
+	struct snd_soc_card *card = platform_get_drvdata(pdev);
+
+	printk("!!!!! bfin_eval_adau1x61_remove:  enter !!!!!\n");
+	snd_soc_unregister_card(card);
+
+	return 0;
 }
 
-module_init(evm_init);
-module_exit(evm_exit);
+static struct platform_driver bfin_eval_adau1x61_driver = {
+	.driver = {
+		.name = "bfin-eval-adau1x61",
+		.owner = THIS_MODULE,
+		.pm = &snd_soc_pm_ops,
+	},
+	.probe = bfin_eval_adau1x61_probe,
+	.remove = __devexit_p(bfin_eval_adau1x61_remove),
+};
 
-MODULE_AUTHOR("Steve Conklin");
-MODULE_DESCRIPTION("Microburst ASoC driver");
+static int __init bfin_eval_adau1x61_init(void)
+{
+	printk("!!!!! bfin_eval_adau1x61_init:  enter !!!!!\n");
+	return platform_driver_register(&bfin_eval_adau1x61_driver);
+}
+module_init(bfin_eval_adau1x61_init);
+
+static void __exit bfin_eval_adau1x61_exit(void)
+{
+	printk("!!!!! bfin_eval_adau1x61_exit:  enter !!!!!\n");
+	platform_driver_unregister(&bfin_eval_adau1x61_driver);
+}
+module_exit(bfin_eval_adau1x61_exit);
+
+MODULE_AUTHOR("Lars-Peter Clausen <lars@metafoo.de>");
+MODULE_DESCRIPTION("ALSA SoC bfin adau1x61 driver");
 MODULE_LICENSE("GPL");
+MODULE_ALIAS("platform:bfin-eval-adau1x61");
