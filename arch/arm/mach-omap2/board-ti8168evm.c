@@ -434,7 +434,7 @@ static void __init ti8168_evm_map_io(void)
 	ti81xx_map_common_io();
 }
 
-MACHINE_START(TI8168EVM, "ti8168evm")
+MACHINE_START(TI8168EVM, "Flex6000Series")
 	/* Maintainer: Texas Instruments */
 	.boot_params	= 0x80000100,
 	.map_io		= ti8168_evm_map_io,
