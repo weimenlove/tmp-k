@@ -5,4 +5,4 @@ make -j4 uImage
 make -j4 modules
 chmod g+rw  arch/arm/boot/uImage
 cp arch/arm/boot/uImage /var/lib/tftpboot/
-#make INSTALL_MOD_PATH=/nfsroots/microburst modules_install
+make INSTALL_MOD_PATH=/nfsroots/microburst modules_install
