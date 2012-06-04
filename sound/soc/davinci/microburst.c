@@ -20,7 +20,7 @@
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/soc.h>
-#include <sound/soc-dapm.h>
+//#include <sound/soc-dapm.h>
 
 #include <asm/dma.h>
 #include <asm/mach-types.h>
@@ -42,7 +42,7 @@
 #define AUDIO_FORMAT (SND_SOC_DAIFMT_DSP_B | \
 		SND_SOC_DAIFMT_CBM_CFM | SND_SOC_DAIFMT_IB_NF)
 
-static int evm_hw_params(struct snd_pcm_substream *substream,
+static int microburst_hw_params(struct snd_pcm_substream *substream,
 			 struct snd_pcm_hw_params *params)
 {
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
@@ -71,22 +71,8 @@ static int evm_hw_params(struct snd_pcm_substream *substream,
 	return 0;
 }
 
-static int evm_spdif_hw_params(struct snd_pcm_substream *substream,
-				struct snd_pcm_hw_params *params)
-{
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
-	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
-
-	/* set cpu DAI configuration */
-	return snd_soc_dai_set_fmt(cpu_dai, AUDIO_FORMAT);
-}
-
-static struct snd_soc_ops evm_ops = {
-	.hw_params = evm_hw_params,
-};
-
-static struct snd_soc_ops evm_spdif_ops = {
-	.hw_params = evm_spdif_hw_params,
+static struct snd_soc_ops microburst_ops = {
+	.hw_params = microburst_hw_params,
 };
 
 /* davinci-evm machine dapm widgets */
@@ -125,19 +111,19 @@ static const struct snd_soc_dapm_route audio_map[] = {
 static int evm_adau1761_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_codec *codec = rtd->codec;
+	struct snd_soc_dapm_context *dapm = &codec->dapm;
 
 	/* Add davinci-evm specific widgets */
-	// expected 'struct snd_soc_dapm_context *' but argument is of type 'struct snd_soc_codec *'
-	snd_soc_dapm_new_controls(codec, adau_dapm_widgets,
+	snd_soc_dapm_new_controls(dapm, adau_dapm_widgets,
 				  ARRAY_SIZE(adau_dapm_widgets));
 
 	/* Set up davinci-evm specific audio path audio_map */
-	snd_soc_dapm_add_routes(codec, audio_map, ARRAY_SIZE(audio_map));
+	snd_soc_dapm_add_routes(dapm, audio_map, ARRAY_SIZE(audio_map));
 
 	/* not connected - these 3 lines left over from TI EVB code */
-	// _soc_dapm_disable_pin(codec, "MONO_LOUT");
-	// _soc_dapm_disable_pin(codec, "HPLCOM");
-	// _soc_dapm_disable_pin(codec, "HPRCOM");
+	// _soc_dapm_disable_pin(dapm, "MONO_LOUT");
+	// _soc_dapm_disable_pin(dapm, "HPLCOM");
+	// _soc_dapm_disable_pin(dapm, "HPRCOM");
 
 	/* always connected */
 	//{ "LAUX", NULL, "In 3-4" },            // Signal ACC_LINE_IN
@@ -157,13 +143,11 @@ static int evm_adau1761_init(struct snd_soc_pcm_runtime *rtd)
 	//{ "Stereo Out", NULL, "LOUT" },        // Ext Speaker
 	//{ "Stereo Out", NULL, "ROUT" },        // Ext Speaker
 
-	snd_soc_dapm_enable_pin(codec, "LINP");
-	snd_soc_dapm_enable_pin(codec, "LINN");
-	snd_soc_dapm_enable_pin(codec, "Mic");
-	snd_soc_dapm_enable_pin(codec, "Capless HP Out");
-	snd_soc_dapm_enable_pin(codec, "Stereo Out");
-
-	snd_soc_dapm_sync(codec);
+	snd_soc_dapm_enable_pin(dapm, "LINP");
+	snd_soc_dapm_enable_pin(dapm, "LINN");
+	snd_soc_dapm_enable_pin(dapm, "Mic");
+	snd_soc_dapm_enable_pin(dapm, "Capless HP Out");
+	snd_soc_dapm_enable_pin(dapm, "Stereo Out");
 
 	return 0;
 }
@@ -178,12 +162,11 @@ static struct snd_soc_dai_link ti81xx_evm_dai[] = {
 		.platform_name = "davinci-pcm-audio",
 		.codec_name = "adau1761.1-0070",
 		.init = evm_adau1761_init,
-		.ops = &evm_ops,
+		.ops = &microburst_ops,
 	},
 };
 
-/* ti8168 evm audio machine driver */
-static struct snd_soc_card ti81xx_snd_soc_card = {
+static struct snd_soc_card microburst_snd_soc_card = {
 	.name = "TI81XX EVM",
 	.dai_link = ti81xx_evm_dai,
 	.num_links = ARRAY_SIZE(ti81xx_evm_dai),
@@ -196,7 +179,7 @@ static int __init evm_init(void)
 	int index;
 	int ret;
 
-	evm_snd_dev_data = &ti81xx_snd_soc_card;
+	evm_snd_dev_data = &microburst_snd_soc_card;
 	index = 0;
 
 	evm_snd_device = platform_device_alloc("soc-audio", index);
@@ -219,6 +202,6 @@ static void __exit evm_exit(void)
 module_init(evm_init);
 module_exit(evm_exit);
 
-MODULE_AUTHOR("Vladimir Barinov");
-MODULE_DESCRIPTION("TI DAVINCI EVM ASoC driver");
+MODULE_AUTHOR("Steve Conklin");
+MODULE_DESCRIPTION("Microburst ASoC driver");
 MODULE_LICENSE("GPL");
