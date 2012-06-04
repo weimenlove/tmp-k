@@ -39,8 +39,11 @@
 #include "davinci-i2s.h"
 #include "davinci-mcasp.h"
 
-#define AUDIO_FORMAT (SND_SOC_DAIFMT_DSP_B | \
-		SND_SOC_DAIFMT_CBM_CFM | SND_SOC_DAIFMT_IB_NF)
+//#define AUDIO_FORMAT (SND_SOC_DAIFMT_DSP_B |			\
+//		SND_SOC_DAIFMT_CBM_CFM | SND_SOC_DAIFMT_IB_NF)
+
+#define AUDIO_FORMAT (SND_SOC_DAIFMT_I2S | \
+		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBM_CFM)
 
 static int microburst_hw_params(struct snd_pcm_substream *substream,
 			 struct snd_pcm_hw_params *params)
@@ -145,7 +148,8 @@ static int evm_adau1761_init(struct snd_soc_pcm_runtime *rtd)
 
 	snd_soc_dapm_enable_pin(dapm, "LINP");
 	snd_soc_dapm_enable_pin(dapm, "LINN");
-	snd_soc_dapm_enable_pin(dapm, "Mic");
+	snd_soc_dapm_enable_pin(dapm, "LAUX");
+	snd_soc_dapm_enable_pin(dapm, "RAUX");
 	snd_soc_dapm_enable_pin(dapm, "Capless HP Out");
 	snd_soc_dapm_enable_pin(dapm, "Stereo Out");
 
