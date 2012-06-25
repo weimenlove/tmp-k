@@ -290,7 +290,7 @@
 #define TXDATADMADIS	BIT(0)
 
 /*
- * DAVINCI_MCASP_W[R]FIFOCTL - Write/Read FIFO Control Register bits
+ * DAVINCI_MCASP_W[R]FIF OCTL - Write/Read FIFO Control Register bits
  */
 #define FIFO_ENABLE	BIT(16)
 #define NUMEVT_MASK	(0xFF << 8)
@@ -320,7 +320,532 @@ static inline void mcasp_set_reg(void __iomem *reg, u32 val)
 
 static inline u32 mcasp_get_reg(void __iomem *reg)
 {
-	return (unsigned int)__raw_readl(reg);
+      return (unsigned int)__raw_readl(reg);
+}
+
+static inline void mcasp_dump_reg(struct davinci_audio_dev *dev)
+{
+	int i;
+	u32 regval;
+	void *regaddr;
+	printk("===== McASP register dump =====\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_PID_REG;
+	regval = __raw_readl(regaddr);
+	printk("PID (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_PFUNC_REG;
+	regval = __raw_readl(regaddr);
+	printk("PFUNC (%04X) = \t %04X\n", (u32)regaddr, regval);
+	/* there are six */
+	for(i=0; i<6; i++) {
+		if (regval & AXR(i))
+			printk("    AXR(%d) is GPIO\n", i);
+		else
+			printk("    AXR(%d) is McASP\n", i);
+	}
+	if (regval & PFUNC_AMUTE)
+		printk("    PFUNC_AMUTE is GPIO\n");
+	else
+		printk("    PFUNC_AMUTE is McASP\n");
+
+	if (regval & ACLKX)
+		printk("    ACLKX is GPIO\n");
+	else
+		printk("    ACLKX is McASP\n");
+
+	if (regval & AHCLKX)
+		printk("    AHCLKX is GPIO\n");
+	else
+		printk("    AHCLKX is McASP\n");
+
+	if (regval & AFSX)
+		printk("    AFSX is GPIO\n");
+	else
+		printk("    AFSX is McASP\n");
+	if (regval & ACLKR)
+		printk("    ACLKR is GPIO\n");
+	else
+		printk("    ACLKR is McASP\n");
+
+	if (regval & AHCLKR)
+		printk("    AHCLKR is GPIO\n");
+	else
+		printk("    AHCLKR is McASP\n");
+
+	if (regval & AFSR)
+		printk("    AFSR is GPIO\n");
+	else
+		printk("    AFSR is McASP\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_PDIR_REG;
+	regval = __raw_readl(regaddr);
+	printk("PDIR (%04X) = \t %04X\n", (u32)regaddr, regval);
+	/* there are six */
+	for(i=0; i<6; i++) {
+		if (regval & AXR(i))
+			printk("    AXR(%d) is OUT\n", i);
+		else
+			printk("    AXR(%d) is IN\n", i);
+	}
+	if (regval & PFUNC_AMUTE)
+		printk("    PFUNC_AMUTE is OUT\n");
+	else
+		printk("    PFUNC_AMUTE is IN\n");
+
+	if (regval & ACLKX)
+		printk("    ACLKX is OUT\n");
+	else
+		printk("    ACLKX is IN\n");
+
+	if (regval & AHCLKX)
+		printk("    AHCLKX is OUT\n");
+	else
+		printk("    AHCLKX is IN\n");
+
+	if (regval & AFSX)
+		printk("    AFSX is OUT\n");
+	else
+		printk("    AFSX is IN\n");
+
+	if (regval & ACLKR)
+		printk("    ACLKR is OUT\n");
+	else
+		printk("    ACLKR is IN\n");
+
+	if (regval & AHCLKR)
+		printk("    AHCLKR is OUT\n");
+	else
+		printk("    AHCLKR is IN\n");
+
+	if (regval & AFSR)
+		printk("    AFSR is OUT\n");
+	else
+		printk("    AFSR is IN\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_PDOUT_REG;
+	regval = __raw_readl(regaddr);
+	printk("PDOUT (%04X) = \t %04X\n", (u32)regaddr, regval);
+/*
+	regaddr = dev->base + DAVINCI_MCASP_PDSET_REG;
+	regval = __raw_readl(regaddr);
+	printk("PDSET (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_PDCLR_REG;
+	regval = __raw_readl(regaddr);
+	printk("PDCLR (%04X) = \t %04X\n", (u32)regaddr, regval);
+*/
+	regaddr = dev->base + DAVINCI_MCASP_TLGC_REG;
+	regval = __raw_readl(regaddr);
+	printk("TLGC (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_TLMR_REG;
+	regval = __raw_readl(regaddr);
+	printk("TLMR (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_GBLCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("GBLCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    RCLKRST is ");
+	if (regval & RXCLKRST)
+		printk("Running\n");
+	else
+		printk("Reset\n");
+
+	printk("    RHCLKRST is ");
+	if (regval & RXHCLKRST)
+		printk("Running\n");
+	else
+		printk("Reset\n");
+
+	printk("    RSRCLR is ");
+	if (regval & RXSERCLR)
+		printk("Active\n");
+	else
+		printk("Cleared\n");
+
+	printk("    RSMRST is ");
+	if (regval & RXSMRST)
+		printk("Detecting\n");
+	else
+		printk("Reset\n");
+
+	printk("    RFSRST is ");
+	if (regval & RXFSRST)
+		printk("Active\n");
+	else
+		printk("Reset\n");
+
+	printk("    XCLKRST is ");
+	if (regval & TXCLKRST)
+		printk("Running\n");
+	else
+		printk("Reset\n");
+
+	printk("    XHCLKRST is ");
+	if (regval & TXHCLKRST)
+		printk("Running\n");
+	else
+		printk("Reset\n");
+
+	printk("    XSRCLR is ");
+	if (regval & TXSERCLR)
+		printk("Active\n");
+	else
+		printk("Cleared\n");
+
+	printk("    XSMRST is ");
+	if (regval & TXSMRST)
+		printk("Active\n");
+	else
+		printk("Reset\n");
+
+	printk("    XFSRST is ");
+	if (regval & TXFSRST)
+		printk("Active\n");
+	else
+		printk("Reset\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_AMUTE_REG;
+	regval = __raw_readl(regaddr);
+	printk("AMUTE (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    POL is ");
+	if (regval & MUTEINPOL)
+		printk("LOW\n");
+	else
+		printk("HIGH\n");
+
+	printk("    INEN is ");
+	if (regval & MUTEINENA)
+		printk("Enabled\n");
+	else
+		printk("Disabled\n");
+
+	printk("    INSTAT is ");
+	if (regval & MUTEIN)
+		printk("Enabled\n");
+	else
+		printk("Disabled\n");
+
+	printk("    ROVRN is ");
+	if (regval & MUTER)
+		printk("Enabled\n");
+	else
+		printk("Disbled\n");
+
+	printk("    XUNDRN is ");
+	if (regval & MUTEX)
+		printk("Enabled\n");
+	else
+		printk("Disabled\n");
+
+	printk("    FSR is ");
+	if (regval & MUTEFSR)
+		printk("Enabled\n");
+	else
+		printk("Diabled\n");
+
+	printk("    FSX is ");
+	if (regval & MUTEFSX)
+		printk("Enabled\n");
+	else
+		printk("Disbled\n");
+
+	printk("    BADCLKR is ");
+	if (regval & MUTEBADCLKR)
+		printk("Enabled\n");
+	else
+		printk("Disabled\n");
+
+	printk("    BADCLKX is ");
+	if (regval & MUTEBADCLKX)
+		printk("Enabled\n");
+	else
+		printk("Disabled\n");
+
+	printk("    RXDMAERR is ");
+	if (regval & MUTERXDMAERR)
+		printk("Enabled\n");
+	else
+		printk("Disabled\n");
+
+	printk("    XDMAERR is ");
+	if (regval & MUTETXDMAERR)
+		printk("Enabled\n");
+	else
+		printk("Disabled\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_LBCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("LBCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    Loopback is ");
+	if (regval & LBEN)
+		printk("Enabled\n");
+	else
+		printk("Diabled\n");
+
+	printk("    LBORD is ");
+	if (regval & LBORD)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_TXDITCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXDITCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+	if (regval & DITEN)
+		printk("    DITEN is SET\n");
+	else
+		printk("    DITEN is CLR\n");
+	if (regval & VA)
+		printk("    VA is SET\n");
+	else
+		printk("    VA is CLR\n");
+	if (regval & VB)
+		printk("    VB is SET\n");
+	else
+		printk("    VB is CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_GBLCTLR_REG;
+	regval = __raw_readl(regaddr);
+	printk("GBLCTLR (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_RXMASK_REG;
+	regval = __raw_readl(regaddr);
+	printk("RXMASK (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_RXFMT_REG;
+	regval = __raw_readl(regaddr);
+	printk("RXFMT (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_RXFMCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("RXFMCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    FSRPOL is ");
+	if (regval & FSRPOL)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	printk("    AFSRE is ");
+	if (regval & AFSRE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	printk("    FSRDUR is ");
+	if (regval & FSRDUR)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_ACLKRCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("ACLKRCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_AHCLKRCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("AHCLKRCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    AHCLKRPOL is ");
+	if (regval & ACLKRPOL)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	printk("    AHCLKRE is ");
+	if (regval & AHCLKRE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_RXTDM_REG;
+	regval = __raw_readl(regaddr);
+	printk("RXTDM (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_EVTCTLR_REG;
+	regval = __raw_readl(regaddr);
+	printk("EVTCTLR (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_RXSTAT_REG;
+	regval = __raw_readl(regaddr);
+	printk("RXSTAT (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_RXTDMSLOT_REG;
+	regval = __raw_readl(regaddr);
+	printk("RXTDMSLOT (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_RXCLKCHK_REG;
+	regval = __raw_readl(regaddr);
+	printk("RXCLKCHK (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_REVTCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("REVTCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    RXDATADMADIS is ");
+	if (regval & RXDATADMADIS)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_GBLCTLX_REG;
+	regval = __raw_readl(regaddr);
+	printk("GBLCTLX (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_TXMASK_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXMASK (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_TXFMT_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXFMT (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_TXFMCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXFMCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	if (regval & FSXPOL)
+		printk("    FSXPOL is SET\n");
+	else
+		printk("    FSXPOL is CLR\n");
+
+	if (regval & AFSXE)
+		printk("    AFSXE is SET\n");
+	else
+		printk("    AXFSE is CLR\n");
+
+	printk("    FSXDUR is ");
+	if (regval & FSXDUR)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_ACLKXCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("ACLKXCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    ACLKXE is ");
+	if (regval & ACLKXE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	printk("    TX_ASYNC is ");
+	if (regval & TX_ASYNC)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	printk("    ACLKXPOL is ");
+	if (regval & ACLKXPOL)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_AHCLKXCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("AHCLKXCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    AHCLKXPOL is ");
+	if (regval & AHCLKXPOL)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	printk("    AHCLKXE is ");
+	if (regval & AHCLKXE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_TXTDM_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXTDM (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_EVTCTLX_REG;
+	regval = __raw_readl(regaddr);
+	printk("EVTCTLX (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_TXSTAT_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXSTAT (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_TXTDMSLOT_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXTDMSLOT (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_TXCLKCHK_REG;
+	regval = __raw_readl(regaddr);
+	printk("TXCLKCHK (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_XEVTCTL_REG;
+	regval = __raw_readl(regaddr);
+	printk("XEVTCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	printk("    TXDATADMADIS is ");
+	if (regval & TXDATADMADIS)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+
+	regaddr = dev->base + DAVINCI_MCASP_DITCSRA_REG;
+	regval = __raw_readl(regaddr);
+	printk("DITCSRA (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_DITCSRB_REG;
+	regval = __raw_readl(regaddr);
+	printk("DITCSRB (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_DITUDRA_REG;
+	regval = __raw_readl(regaddr);
+	printk("DITUDRA (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_DITUDRB_REG;
+	regval = __raw_readl(regaddr);
+	printk("DITUDRB (%04X) = \t %04X\n", (u32)regaddr, regval);
+
+	regaddr = dev->base + DAVINCI_MCASP_WFIFOCTL;
+	regval = __raw_readl(regaddr);
+	printk("WFIFOCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+	printk("    FIFO_ENABLE is ");
+	if (regval & FIFO_ENABLE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_WFIFOSTS;
+	regval = __raw_readl(regaddr);
+	printk("WFIFOSTS (%04X) = \t %04X\n", (u32)regaddr, regval);
+	printk("    FIFO_ENABLE is ");
+	if (regval & FIFO_ENABLE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_RFIFOCTL;
+	regval = __raw_readl(regaddr);
+	printk("RFIFOCTL (%04X) = \t %04X\n", (u32)regaddr, regval);
+	printk("    FIFO_ENABLE is ");
+	if (regval & FIFO_ENABLE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
+	regaddr = dev->base + DAVINCI_MCASP_RFIFOSTS;
+	regval = __raw_readl(regaddr);
+	printk("RFIFOSTS (%04X) = \t %04X\n", (u32)regaddr, regval);
+	printk("    FIFO_ENABLE is ");
+	if (regval & FIFO_ENABLE)
+		printk("SET\n");
+	else
+		printk("CLR\n");
+
 }
 
 static inline void mcasp_set_ctl_reg(void __iomem *regs, u32 val)
@@ -342,6 +867,7 @@ static inline void mcasp_set_ctl_reg(void __iomem *regs, u32 val)
 
 static void mcasp_start_rx(struct davinci_audio_dev *dev)
 {
+	printk("*** davinci-mcasp.c: Enter mcasp_start_rx ***\n");
 	mcasp_set_ctl_reg(dev->base + DAVINCI_MCASP_GBLCTLR_REG, RXHCLKRST);
 	mcasp_set_ctl_reg(dev->base + DAVINCI_MCASP_GBLCTLR_REG, RXCLKRST);
 	mcasp_set_ctl_reg(dev->base + DAVINCI_MCASP_GBLCTLR_REG, RXSERCLR);
@@ -360,6 +886,7 @@ static void mcasp_start_tx(struct davinci_audio_dev *dev)
 	u8 offset = 0, i;
 	u32 cnt;
 
+	printk("*** davinci-mcasp.c: Enter mcasp_start_tx ***\n");
 	mcasp_set_ctl_reg(dev->base + DAVINCI_MCASP_GBLCTLX_REG, TXHCLKRST);
 	mcasp_set_ctl_reg(dev->base + DAVINCI_MCASP_GBLCTLX_REG, TXCLKRST);
 	mcasp_set_ctl_reg(dev->base + DAVINCI_MCASP_GBLCTLX_REG, TXSERCLR);
@@ -382,10 +909,13 @@ static void mcasp_start_tx(struct davinci_audio_dev *dev)
 		cnt++;
 
 	mcasp_set_reg(dev->base + DAVINCI_MCASP_TXBUF_REG, 0);
+	printk("*** davinci-mcasp.c: Exit mcasp_start_tx ***\n");
+	mcasp_dump_reg(dev);
 }
 
 static void davinci_mcasp_start(struct davinci_audio_dev *dev, int stream)
 {
+	printk("*** davinci-mcasp.c: Enter mcasp_start ***\n");
 	if (stream == SNDRV_PCM_STREAM_PLAYBACK) {
 		if (dev->txnumevt)	/* enable FIFO */
 			mcasp_set_bits(dev->base + DAVINCI_MCASP_WFIFOCTL,
@@ -401,18 +931,21 @@ static void davinci_mcasp_start(struct davinci_audio_dev *dev, int stream)
 
 static void mcasp_stop_rx(struct davinci_audio_dev *dev)
 {
+	printk("*** davinci-mcasp.c: Enter mcasp_stop_rx ***\n");
 	mcasp_set_reg(dev->base + DAVINCI_MCASP_GBLCTLR_REG, 0);
 	mcasp_set_reg(dev->base + DAVINCI_MCASP_RXSTAT_REG, 0xFFFFFFFF);
 }
 
 static void mcasp_stop_tx(struct davinci_audio_dev *dev)
 {
+	printk("*** davinci-mcasp.c: Enter mcasp_start_tx ***\n");
 	mcasp_set_reg(dev->base + DAVINCI_MCASP_GBLCTLX_REG, 0);
 	mcasp_set_reg(dev->base + DAVINCI_MCASP_TXSTAT_REG, 0xFFFFFFFF);
 }
 
 static void davinci_mcasp_stop(struct davinci_audio_dev *dev, int stream)
 {
+	printk("*** davinci-mcasp.c: Enter mcasp_stop ***\n");
 	if (stream == SNDRV_PCM_STREAM_PLAYBACK) {
 		if (dev->txnumevt)	/* disable FIFO */
 			mcasp_clr_bits(dev->base + DAVINCI_MCASP_WFIFOCTL,
@@ -432,6 +965,7 @@ static int davinci_mcasp_set_dai_fmt(struct snd_soc_dai *cpu_dai,
 	struct davinci_audio_dev *dev = snd_soc_dai_get_drvdata(cpu_dai);
 	void __iomem *base = dev->base;
 
+	printk("*** davinci-mcasp.c: Enter mcasp_set_dai_fmt ***\n");
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBS_CFS:
 		/* codec is clock and frame slave */
@@ -514,6 +1048,7 @@ static int davinci_config_channel_size(struct davinci_audio_dev *dev,
 	u32 fmt = 0;
 	u32 mask, rotate;
 
+	printk("*** davinci-mcasp.c: Enter davinci_config_channel_size ***\n");
 	switch (channel_size) {
 	case DAVINCI_AUDIO_WORD_8:
 		fmt = 0x03;
@@ -581,6 +1116,7 @@ static void davinci_hw_common_param(struct davinci_audio_dev *dev, int stream)
 	u8 tx_ser = 0;
 	u8 rx_ser = 0;
 
+	printk("*** davinci-mcasp.c: Enter davinci_hw_common_param ***\n");
 	/* Default configuration */
 	mcasp_set_bits(dev->base + DAVINCI_MCASP_PWREMUMGT_REG, MCASP_SOFT);
 
@@ -637,6 +1173,7 @@ static void davinci_hw_param(struct davinci_audio_dev *dev, int stream)
 	int i, active_slots;
 	u32 mask = 0;
 
+	printk("*** davinci-mcasp.c: Enter davinci_hw_param ***\n");
 	active_slots = (dev->tdm_slots > 31) ? 32 : dev->tdm_slots;
 	for (i = 0; i < active_slots; i++)
 		mask |= (1 << i);
@@ -681,6 +1218,7 @@ static void davinci_hw_param(struct davinci_audio_dev *dev, int stream)
 /* S/PDIF */
 static void davinci_hw_dit_param(struct davinci_audio_dev *dev)
 {
+	printk("*** davinci-mcasp.c: Enter davinci_hw_dit_params ***\n");
 	/* Set the PDIR for Serialiser as output */
 	mcasp_set_bits(dev->base + DAVINCI_MCASP_PDIR_REG, AFSX);
 
@@ -722,6 +1260,7 @@ static int davinci_mcasp_hw_params(struct snd_pcm_substream *substream,
 	int word_length;
 	u8 fifo_level;
 
+	printk("*** davinci-mcasp.c: Enter davinci_mcasp_hw_params ***\n");
 	davinci_hw_common_param(dev, substream->stream);
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 		fifo_level = dev->txnumevt;
@@ -771,6 +1310,7 @@ static int davinci_mcasp_trigger(struct snd_pcm_substream *substream,
 	struct davinci_audio_dev *dev = snd_soc_dai_get_drvdata(cpu_dai);
 	int ret = 0;
 
+	printk("*** davinci-mcasp.c: Enter davinci_mcasp_trigger ***\n");
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_RESUME:
 	case SNDRV_PCM_TRIGGER_START:
@@ -808,6 +1348,7 @@ static int davinci_mcasp_startup(struct snd_pcm_substream *substream,
 {
 	struct davinci_audio_dev *dev = snd_soc_dai_get_drvdata(dai);
 
+	printk("*** davinci-mcasp.c: Enter davinci_mcasp_startup ***\n");
 	snd_soc_dai_set_dma_data(dai, substream, dev->dma_params);
 	return 0;
 }
@@ -863,6 +1404,7 @@ static int davinci_mcasp_probe(struct platform_device *pdev)
 	struct davinci_audio_dev *dev;
 	int ret = 0;
 
+	printk("*** davinci-mcasp.c: Enter davinci_mcasp_probe ***\n");
 	dev = kzalloc(sizeof(struct davinci_audio_dev), GFP_KERNEL);
 	if (!dev)
 		return	-ENOMEM;
@@ -993,6 +1535,7 @@ static struct platform_driver davinci_mcasp_driver = {
 
 static int __init davinci_mcasp_init(void)
 {
+	printk("*** davinci-mcasp.c: Enter davinci_mcasp_init ***\n");
 	return platform_driver_register(&davinci_mcasp_driver);
 }
 module_init(davinci_mcasp_init);
