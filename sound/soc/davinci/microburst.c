@@ -42,13 +42,66 @@
 // Comments based on looking at the adau17x1 code:
 //
 //             SND_SOC_DAIFMT_CBS_CFS (codec is clock and frame slave)
-// DO NOT WANT SND_SOC_DAIFMT_I2S (McASP only supports 2 chan in this mode)
-//             SND_SOC_DAIFMT_LEFT_J (left justified)
+// MIGHT WANT SND_SOC_DAIFMT_LEFT_J
+// MIGHT WANT SND_SOC_DAIFMT_I2S (McASP only supports 2 chan in this mode)
 //     MAYBE   SND_SOC_DAIFMT_IB_NF (inverted BitClock, normal Frame)
 //             SND_SOC_DAIFMT_NB_NF (normal BitClock, normal Frame)
 //
-#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J | \
+
+// Set cpu as master for both bit clock and frame clock
+// bit clock goes high but no clock
+#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
 		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBS_CFS)
+
+// set codec as master for both clocks
+// no change on bit clock
+//#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
+//		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBM_CFM)
+
+// CPU bitlclk master, codec frame clock master
+//: Unsigned 8 bit[  473.400000] asoc: machine hw_params failed
+//, Rate 8000 Hz, Mono
+//aplay: set_params:1145: Unable to install hw params:
+//ACCESS:  RW_INTERLEAVED
+//FORMAT:  U8
+//SUBFORMAT:  STD
+//SAMPLE_BITS: 8
+//FRAME_BITS: 8
+//CHANNELS: 1
+//RATE: 8000
+//PERIOD_TIME: 125000
+//PERIOD_SIZE: 1000
+//PERIOD_BYTES: 1000
+//PERIODS: 16
+//BUFFER_TIME: 2000000
+//BUFFER_SIZE: 16000
+//BUFFER_BYTES: 16000
+//TICK_TIME: 0
+//#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
+//		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBS_CFM)
+
+//root@c6a816x-evm:~# aplay /dev/urandom
+//Playing raw data '/dev/urandom' [  272.340000] *** microburst.c: Enter microburst_hw_params ***
+//: Unsigned 8 bit[  272.350000] asoc: machine hw_params failed
+//, Rate 8000 Hz, Mono
+//aplay: set_params:1145: Unable to install hw params:
+//ACCESS:  RW_INTERLEAVED
+//FORMAT:  U8
+//SUBFORMAT:  STD
+//SAMPLE_BITS: 8
+//FRAME_BITS: 8
+//CHANNELS: 1
+//RATE: 8000
+//PERIOD_TIME: 125000
+//PERIOD_SIZE: 1000
+//PERIOD_BYTES: 1000
+//PERIODS: 16
+//BUFFER_TIME: 2000000
+//BUFFER_SIZE: 16000
+//BUFFER_BYTES: 16000
+//TICK_TIME: 0
+//#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
+//		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBM_CFS)
 
 static int microburst_hw_params(struct snd_pcm_substream *substream,
 			 struct snd_pcm_hw_params *params)
@@ -73,6 +126,7 @@ static int microburst_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 
 	/* Set up for clock input on MCLK */
+	// in the codec code, direction (last parameter) is ignored
 	ret = snd_soc_dai_set_sysclk(codec_dai, ADAU17X1_CLK_SRC_MCLK, sysclk,
 			SND_SOC_CLOCK_IN);
 	if (ret < 0)
