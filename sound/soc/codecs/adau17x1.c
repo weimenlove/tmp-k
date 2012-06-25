@@ -344,6 +344,7 @@ static int adau17x1_hw_params(struct snd_pcm_substream *substream,
 static int adau17x1_dai_startup(struct snd_pcm_substream *substream,
 			   struct snd_soc_dai *dai)
 {
+	printk("*** adau17x1c: Enter adau17x1_dai_startup ***\n");
 	adau17x1_check_aifclk(dai->codec);
 
 	return 0;
@@ -352,6 +353,7 @@ static int adau17x1_dai_startup(struct snd_pcm_substream *substream,
 static void adau17x1_dai_shutdown(struct snd_pcm_substream *substream,
 			   struct snd_soc_dai *dai)
 {
+	printk("*** adau17x1c: Enter adau17x1_dai_shutdown ***\n");
 	adau17x1_check_aifclk(dai->codec);
 }
 
@@ -364,6 +366,7 @@ static int adau17x1_set_dai_pll(struct snd_soc_dai *dai, int pll_id,
 	unsigned int div;
 	unsigned int r, n, m, i, j;
 
+	printk("*** adau17x1c: Enter adau17x1_set_dai_pll ***\n");
 	if (freq_in < 8000000 || freq_in > 27000000)
 		return -EINVAL;
 
@@ -411,6 +414,7 @@ static int adau17x1_set_dai_sysclk(struct snd_soc_dai *dai,
 {
 	struct adau *adau = snd_soc_codec_get_drvdata(dai->codec);
 
+	printk("*** adau17x1c: Enter adau17x1_set_dai_sysclk ***\n");
 	switch (clk_id) {
 	case ADAU17X1_CLK_SRC_MCLK:
 	case ADAU17X1_CLK_SRC_PLL:
@@ -454,6 +458,7 @@ static int adau17x1_set_dai_fmt(struct snd_soc_dai *dai,
 	unsigned int ctrl0, ctrl1;
 	int lrclk_pol;
 
+	printk("*** adau17x1c: Enter adau17x1_set_dai_fmt ***\n");
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBM_CFM:
 		ctrl0 = ADAU17X1_SERIAL_PORT0_MASTER;
@@ -527,6 +532,7 @@ static int adau17x1_set_dai_tdm_slot(struct snd_soc_dai *dai,
 	unsigned int ser_ctrl0, ser_ctrl1;
 	unsigned int conv_ctrl0, conv_ctrl1;
 
+	printk("*** adau17x1c: Enter adau17x1_set_dai_tdm_slot ***\n");
 	/* I2S mode */
 	if (slots == 0) {
 		slots = 2;
