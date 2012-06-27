@@ -50,13 +50,13 @@
 
 // Set cpu as master for both bit clock and frame clock
 // bit clock goes high but no clock
-#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
-		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBS_CFS)
+//#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
+//		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBS_CFS)
 
 // set codec as master for both clocks
 // no change on bit clock
-//#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
-//		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBM_CFM)
+#define AUDIO_FORMAT (SND_SOC_DAIFMT_LEFT_J |			\
+		SND_SOC_DAIFMT_NB_NF | SND_SOC_DAIFMT_CBM_CFM)
 
 // CPU bitlclk master, codec frame clock master
 //: Unsigned 8 bit[  473.400000] asoc: machine hw_params failed
